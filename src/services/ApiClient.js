@@ -1,3 +1,4 @@
+
 // ApiClient.js
 import { supabase } from "@/integrations/supabase/client";
 
@@ -231,6 +232,64 @@ export const ApiClient = {
 
     if (error) throw error;
     return data;
+  },
+
+  // Process a game bet and update credits
+  async processGameBet(userId, gameType, betAmount, result, winAmount) {
+    // Get game ID
+    const { data: gameData, error: gameError } = await supabase
+      .from('games')
+      .select('id')
+      .eq('game_type', gameType)
+      .single();
+
+    if (gameError) throw gameError;
+    
+    // Create a game session
+    const { data: sessionData, error: sessionError } = await supabase
+      .from('game_sessions')
+      .insert([{
+        game_id: gameData.id,
+        status: 'completed'
+      }])
+      .select()
+      .single();
+
+    if (sessionError) throw sessionError;
+
+    // Add participant to game
+    await supabase
+      .from('game_participants')
+      .insert([{
+        session_id: sessionData.id,
+        profile_id: userId,
+        score: winAmount,
+        status: 'completed'
+      }]);
+
+    // Create a credit transaction
+    const { error: transactionError } = await supabase
+      .from('credit_transactions')
+      .insert([{
+        profile_id: userId,
+        amount: winAmount,
+        transaction_type: 'game_bet',
+        description: `${gameType} game: ${result}`,
+        reference_id: sessionData.id
+      }]);
+
+    if (transactionError) throw transactionError;
+
+    // Update user's balance
+    const { error: updateError } = await supabase
+      .rpc('update_credit_balance', {
+        user_id: userId,
+        amount: winAmount
+      });
+
+    if (updateError) throw updateError;
+
+    return true;
   },
 
   // Transfer credits from a merchant to a customer
