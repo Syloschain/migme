@@ -40,13 +40,20 @@ const RoleManagement = () => {
   const fetchUsers = async () => {
     setLoading(true);
     try {
+      // Update query to handle potential missing is_supermentor column
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, username, roles, is_admin, is_mentor, is_merchant, is_moderator, is_owner, is_supermentor')
-        .order('username');
+        .select('id, username, roles, is_admin, is_mentor, is_merchant, is_moderator, is_owner');
       
       if (error) throw error;
-      setUsers(data || []);
+      
+      // Process the data to add is_supermentor property based on roles array
+      const processedData = (data || []).map(user => ({
+        ...user,
+        is_supermentor: user.roles?.includes('supermentor') || false
+      }));
+      
+      setUsers(processedData);
     } catch (error) {
       console.error('Error fetching users:', error);
       toast({

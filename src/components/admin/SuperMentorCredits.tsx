@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Coin } from "lucide-react";
+import { Coins } from "lucide-react";
 
 const SuperMentorCredits = () => {
   const { user, profile } = useAuth();
@@ -92,7 +92,7 @@ const SuperMentorCredits = () => {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Coin className="h-5 w-5 text-migorange" />
+          <Coins className="h-5 w-5 text-migorange" />
           SuperMentor: Generate Credits
         </CardTitle>
       </CardHeader>
