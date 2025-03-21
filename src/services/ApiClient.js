@@ -231,5 +231,73 @@ export const ApiClient = {
 
     if (error) throw error;
     return data;
+  },
+
+  // Transfer credits from a merchant to a customer
+  async transferCredits(senderId, receiverId, amount, note) {
+    // First, check that the sender is a merchant
+    const { data: senderData, error: senderError } = await supabase
+      .from('profiles')
+      .select('is_merchant, credit_balance')
+      .eq('id', senderId)
+      .single();
+    
+    if (senderError) throw senderError;
+    if (!senderData.is_merchant) throw new Error("Only merchants can transfer credits");
+    if (senderData.credit_balance < amount) throw new Error("Insufficient credits");
+    
+    // Add a credit transaction for the receiver
+    const { data, error } = await supabase
+      .from('credit_transactions')
+      .insert({
+        profile_id: receiverId,
+        amount: amount,
+        transaction_type: 'merchant_transfer',
+        description: note || 'Credit transfer from merchant',
+        reference_id: senderId
+      });
+    
+    if (error) throw error;
+    
+    // Remove credits from the sender
+    const { error: deductError } = await supabase
+      .from('credit_transactions')
+      .insert({
+        profile_id: senderId,
+        amount: -amount,
+        transaction_type: 'merchant_transfer_deduction',
+        description: `Transfer to user ID: ${receiverId}`,
+        reference_id: receiverId
+      });
+    
+    if (deductError) throw deductError;
+    
+    // Record the merchant relationship
+    const { error: relationError } = await supabase
+      .from('merchant_transactions')
+      .insert({
+        merchant_id: senderId,
+        customer_id: receiverId,
+        amount: amount,
+        commission: Math.floor(amount * 0.1), // 10% commission
+        status: 'completed'
+      });
+    
+    if (relationError) throw relationError;
+    
+    return data;
+  },
+
+  // Get credit transaction history for a user
+  async getCreditTransactions(userId, limit = 20) {
+    const { data, error } = await supabase
+      .from('credit_transactions')
+      .select('*')
+      .eq('profile_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+    
+    if (error) throw error;
+    return data;
   }
 };

@@ -9,10 +9,11 @@ import { useNavigate } from "react-router-dom";
 
 interface CreditBalanceWidgetProps {
   className?: string;
+  refreshTrigger?: number;
 }
 
-const CreditBalanceWidget = ({ className }: CreditBalanceWidgetProps) => {
-  const { profile } = useAuth();
+const CreditBalanceWidget = ({ className, refreshTrigger = 0 }: CreditBalanceWidgetProps) => {
+  const { profile, user } = useAuth();
   const [credits, setCredits] = useState(0);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -21,7 +22,7 @@ const CreditBalanceWidget = ({ className }: CreditBalanceWidgetProps) => {
     if (profile && profile.credit_balance !== undefined) {
       setCredits(profile.credit_balance);
     }
-  }, [profile]);
+  }, [profile, refreshTrigger]);
 
   const handleBuyCredits = () => {
     navigate("/store");

@@ -10,9 +10,16 @@ interface CreditDisplayProps {
   showBuyButton?: boolean;
   size?: "sm" | "md" | "lg";
   className?: string;
+  refreshTrigger?: number;
 }
 
-const CreditDisplay = ({ showBuyButton = true, size = "md", className, credits: propCredits }: CreditDisplayProps) => {
+const CreditDisplay = ({ 
+  showBuyButton = true, 
+  size = "md", 
+  className, 
+  credits: propCredits,
+  refreshTrigger = 0 
+}: CreditDisplayProps) => {
   const { profile } = useAuth();
   const [credits, setCredits] = useState(propCredits || 0);
 
@@ -22,7 +29,7 @@ const CreditDisplay = ({ showBuyButton = true, size = "md", className, credits: 
     } else if (propCredits !== undefined) {
       setCredits(propCredits);
     }
-  }, [profile, propCredits]);
+  }, [profile, propCredits, refreshTrigger]);
 
   const sizeClasses = {
     sm: "text-xs",
@@ -58,6 +65,7 @@ const CreditDisplay = ({ showBuyButton = true, size = "md", className, credits: 
                 <li>Leveling up</li>
                 <li>Winning games</li>
                 <li>Referring friends</li>
+                <li>Merchant commissions</li>
               </ul>
             </div>
           </div>

@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Card, 
   CardContent, 
@@ -16,15 +16,50 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import { ApiClient } from "@/services/ApiClient";
 import { supabase } from "@/integrations/supabase/client";
+import { format } from "date-fns";
+
+interface Transaction {
+  id: string;
+  amount: number;
+  transaction_type: string;
+  description: string;
+  created_at: string;
+}
 
 const CreditManager = () => {
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [username, setUsername] = useState("");
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
   const [userId, setUserId] = useState("");
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+
+  useEffect(() => {
+    if (profile?.is_merchant && user) {
+      fetchTransactionHistory();
+    }
+  }, [profile, user]);
+
+  const fetchTransactionHistory = async () => {
+    if (!user) return;
+    
+    try {
+      setIsLoadingHistory(true);
+      const data = await ApiClient.getCreditTransactions(user.id);
+      setTransactions(data);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to load transaction history",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  };
 
   const searchUser = async () => {
     if (!username) {
@@ -74,7 +109,7 @@ const CreditManager = () => {
   const handleTransfer = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!userId || !amount) {
+    if (!userId || !amount || !user) {
       toast({
         title: "Missing information",
         description: "Please fill in all required fields",
@@ -105,29 +140,16 @@ const CreditManager = () => {
     try {
       setIsLoading(true);
       
-      // Add transaction
-      await ApiClient.addCreditTransaction(
-        userId, 
-        credits, 
-        "merchant_transfer", 
-        note || `Transfer from ${profile.username}`
-      );
-      
-      // Record merchant relationship
-      await supabase
-        .from('merchant_transactions')
-        .insert({
-          merchant_id: profile.id,
-          customer_id: userId,
-          amount: credits,
-          commission: Math.floor(credits * 0.1), // 10% commission
-          status: 'completed'
-        });
+      // Transfer credits
+      await ApiClient.transferCredits(user.id, userId, credits, note);
       
       toast({
         title: "Credits Transferred!",
         description: `${credits} credits have been transferred to the user.`,
       });
+      
+      // Refresh transaction history
+      fetchTransactionHistory();
       
       // Reset form
       setUsername("");
@@ -142,6 +164,23 @@ const CreditManager = () => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const getTransactionTypeLabel = (type: string) => {
+    switch (type) {
+      case 'merchant_transfer':
+        return 'Credit Transfer';
+      case 'merchant_transfer_deduction':
+        return 'Transfer Sent';
+      case 'purchase':
+        return 'Purchase';
+      case 'gift':
+        return 'Gift';
+      case 'reward':
+        return 'Reward';
+      default:
+        return type.replace(/_/g, ' ');
     }
   };
   
@@ -259,9 +298,40 @@ const CreditManager = () => {
           </TabsContent>
           
           <TabsContent value="history" className="mt-4">
-            <p className="text-center text-muted-foreground py-8">
-              Transaction history coming soon...
-            </p>
+            {isLoadingHistory ? (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">Loading transaction history...</p>
+              </div>
+            ) : transactions.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">No transaction history yet</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <h3 className="font-medium">Recent Transactions</h3>
+                <div className="space-y-2">
+                  {transactions.map((transaction) => (
+                    <div 
+                      key={transaction.id} 
+                      className="border rounded-md p-3 flex justify-between items-center"
+                    >
+                      <div>
+                        <div className="font-medium">{getTransactionTypeLabel(transaction.transaction_type)}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {transaction.description || 'No description'}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {format(new Date(transaction.created_at), 'PPp')}
+                        </div>
+                      </div>
+                      <div className={`text-lg font-semibold ${transaction.amount > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {transaction.amount > 0 ? '+' : ''}{transaction.amount}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </CardContent>
