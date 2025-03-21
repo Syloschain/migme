@@ -16,13 +16,13 @@ export const enableRealtimeForTable = async (tableName: string) => {
     const { error: replicaError } = await supabase.rpc('set_replica_identity', { 
       table: tableName, 
       value: 'full' 
-    });
+    } as any); // Using type assertion to bypass TypeScript's strict checking
     if (replicaError) throw replicaError;
     
     // Add the table to the realtime publication
     const { error: pubError } = await supabase.rpc('add_table_to_publication', { 
       table: tableName 
-    });
+    } as any); // Using type assertion to bypass TypeScript's strict checking
     if (pubError) throw pubError;
     
     console.log(`Realtime enabled for table: ${tableName}`);
@@ -40,9 +40,7 @@ export const enableRealtimeForTable = async (tableName: string) => {
  */
 export const checkResourceAccess = async (tableName: string, id: string) => {
   try {
-    // Type the table name as a union of all table names in the schema
-    // This is a temporary solution to bypass type checking for dynamic table access
-    // In a real-world scenario, you might want to use a type-safe approach
+    // Use type assertion to bypass TypeScript's strict type checking for dynamic table access
     const { data, error, count } = await supabase
       .from(tableName as any)
       .select('*', { count: 'exact' })
