@@ -518,9 +518,14 @@ export type Database = {
           created_at: string | null
           credit_balance: number | null
           id: string
+          is_admin: boolean | null
+          is_mentor: boolean | null
           is_merchant: boolean | null
+          is_moderator: boolean | null
+          is_owner: boolean | null
           is_vip: boolean | null
           level: number | null
+          roles: Database["public"]["Enums"]["user_role"][] | null
           status: string | null
           total_xp: number | null
           updated_at: string | null
@@ -532,9 +537,14 @@ export type Database = {
           created_at?: string | null
           credit_balance?: number | null
           id: string
+          is_admin?: boolean | null
+          is_mentor?: boolean | null
           is_merchant?: boolean | null
+          is_moderator?: boolean | null
+          is_owner?: boolean | null
           is_vip?: boolean | null
           level?: number | null
+          roles?: Database["public"]["Enums"]["user_role"][] | null
           status?: string | null
           total_xp?: number | null
           updated_at?: string | null
@@ -546,15 +556,52 @@ export type Database = {
           created_at?: string | null
           credit_balance?: number | null
           id?: string
+          is_admin?: boolean | null
+          is_mentor?: boolean | null
           is_merchant?: boolean | null
+          is_moderator?: boolean | null
+          is_owner?: boolean | null
           is_vip?: boolean | null
           level?: number | null
+          roles?: Database["public"]["Enums"]["user_role"][] | null
           status?: string | null
           total_xp?: number | null
           updated_at?: string | null
           username?: string
         }
         Relationships: []
+      }
+      room_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["user_role"]
+          room_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["user_role"]
+          room_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          room_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_roles_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "chat_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_badges: {
         Row: {
@@ -594,10 +641,31 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      assign_room_role: {
+        Args: {
+          room_id: string
+          target_user: string
+          role: Database["public"]["Enums"]["user_role"]
+        }
+        Returns: undefined
+      }
+      update_user_role: {
+        Args: {
+          target_user: string
+          role: Database["public"]["Enums"]["user_role"]
+          add_role: boolean
+        }
+        Returns: undefined
+      }
     }
     Enums: {
-      [_ in never]: never
+      user_role:
+        | "admin"
+        | "owner"
+        | "moderator"
+        | "mentor"
+        | "merchant"
+        | "user"
     }
     CompositeTypes: {
       [_ in never]: never

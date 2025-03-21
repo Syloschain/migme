@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import UserRoleBadge from "@/components/profile/UserRoleBadge";
 import { UserRole } from "@/utils/roleUtils";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface UserWithRoles {
   id: string;
