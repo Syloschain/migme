@@ -1,16 +1,34 @@
 
+import { useState } from "react";
 import Layout from "@/components/layout/Layout";
 import GamesList from "@/components/gaming/GamesList";
 import TriviaMiniGame from "@/components/gaming/TriviaMiniGame";
 import LowCardGame from "@/components/gaming/LowCardGame";
 import LeaderboardComponent from "@/components/gaming/LeaderboardComponent";
 import GameAchievements from "@/components/gaming/GameAchievements";
+import GameFilters, { GameType } from "@/components/gaming/GameFilters";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CreditDisplay from "@/components/credits/CreditDisplay";
 import LevelProgress from "@/components/profile/LevelProgress";
 import { Card, CardContent } from "@/components/ui/card";
 
 const GamesPage = () => {
+  const [filters, setFilters] = useState({
+    type: "all" as GameType,
+    category: "all",
+    sort: "popular"
+  });
+
+  const handleFilterChange = (newFilters: {
+    type: GameType;
+    category: string;
+    sort: string;
+  }) => {
+    setFilters(newFilters);
+    console.log("Filters updated:", newFilters);
+    // In a real app, you would filter the games list based on these filters
+  };
+
   return (
     <Layout>
       <div className="max-w-6xl mx-auto">
@@ -31,6 +49,8 @@ const GamesPage = () => {
             <CreditDisplay credits={500} showBuyButton={true} />
           </div>
         </div>
+        
+        <GameFilters onFilterChange={handleFilterChange} />
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <div className="md:col-span-2">
