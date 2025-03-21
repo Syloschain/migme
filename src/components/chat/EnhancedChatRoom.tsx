@@ -8,6 +8,9 @@ import { useChat } from "@/contexts/ChatContext";
 import { useAuth } from "@/context/AuthContext";
 import { usePresence } from "@/hooks/use-presence";
 import { UserRole } from "@/utils/roleUtils";
+import { Shield } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 interface EnhancedChatRoomProps {
   roomId?: string;
@@ -31,18 +34,45 @@ const EnhancedChatRoom = ({
   roomDescription,
   onlineCount = 0
 }: EnhancedChatRoomProps) => {
-  const { messages, loadingMessages, sendMessage } = useChat();
+  const { messages, loadingMessages, sendMessage, muteUser, kickUser, banUser } = useChat();
   const { user } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { onlineUsers } = usePresence(roomId);
+  const [revealedMessages, setRevealedMessages] = useState<string[]>([]);
   
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSendMessage = (message: string, type: string = 'text') => {
+  const handleSendMessage = (message: string, type: string = 'text', isLocked: boolean = false) => {
     if (message.trim()) {
-      sendMessage(message, type);
+      sendMessage(message, type, isLocked);
+    }
+  };
+
+  const handleUnlockMessage = (messageId: string) => {
+    setRevealedMessages(prev => [...prev, messageId]);
+  };
+
+  const isCurrentUserModerator = () => {
+    if (!user) return false;
+    const currentUserRoles = user.user_metadata?.roles as UserRole[] || [];
+    return currentUserRoles.some(role => ['admin', 'moderator', 'owner'].includes(role));
+  };
+
+  const handleModeration = (action: 'mute' | 'kick' | 'ban', userId?: string) => {
+    if (!userId) return;
+    
+    switch (action) {
+      case 'mute':
+        muteUser(userId);
+        break;
+      case 'kick':
+        kickUser(userId);
+        break;
+      case 'ban':
+        banUser(userId);
+        break;
     }
   };
 
@@ -77,20 +107,50 @@ const EnhancedChatRoom = ({
               ))
           ) : messages.length > 0 ? (
             messages.map((message) => (
-              <ChatMessage
-                key={message.id}
-                id={message.id}
-                content={message.content}
-                timestamp={new Date(message.created_at)}
-                sender={{
-                  id: message.sender_id,
-                  username: message.sender?.username || "Unknown User",
-                  avatarUrl: message.sender?.avatar_url,
-                  isVIP: message.sender?.is_vip || false,
-                  roles: message.sender?.roles as UserRole[] || ['user'],
-                }}
-                isOwnMessage={message.sender_id === user?.id}
-              />
+              <div key={message.id} className="relative">
+                <ChatMessage
+                  id={message.id}
+                  content={
+                    message.is_locked && !revealedMessages.includes(message.id) 
+                    ? "🔒 This message is locked. Click to unlock." 
+                    : message.content
+                  }
+                  timestamp={new Date(message.created_at)}
+                  sender={{
+                    id: message.sender_id,
+                    username: message.sender?.username || "Unknown User",
+                    avatarUrl: message.sender?.avatar_url,
+                    isVIP: message.sender?.is_vip || false,
+                    roles: message.sender?.roles as UserRole[] || ['user'],
+                  }}
+                  isOwnMessage={message.sender_id === user?.id}
+                  isLocked={message.is_locked && !revealedMessages.includes(message.id)}
+                  onUnlock={() => handleUnlockMessage(message.id)}
+                />
+                
+                {isCurrentUserModerator() && message.sender_id !== user?.id && (
+                  <div className="absolute top-0 right-0">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-6 w-6">
+                          <Shield className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleModeration('mute', message.sender_id)}>
+                          Mute User
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleModeration('kick', message.sender_id)}>
+                          Kick User
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleModeration('ban', message.sender_id)}>
+                          Ban User
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                )}
+              </div>
             ))
           ) : (
             <div className="text-center py-8 text-muted-foreground">

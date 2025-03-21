@@ -3,16 +3,18 @@ import { format } from "date-fns";
 import UserAvatar from "../profile/UserAvatar";
 import UserRoleBadge from "../profile/UserRoleBadge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Heart } from "lucide-react";
+import { Heart, Lock, Unlock } from "lucide-react";
 import { useState } from "react";
 import { UserRole } from "@/utils/roleUtils";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 interface ChatMessageProps {
   id: string;
   content: string;
   timestamp: Date;
   sender: {
-    id?: string; // Add sender id to determine if this message is from the current user
+    id?: string;
     username: string;
     avatarUrl?: string;
     level?: number;
@@ -20,6 +22,8 @@ interface ChatMessageProps {
     isVIP?: boolean;
   };
   isOwnMessage?: boolean;
+  isLocked?: boolean;
+  onUnlock?: () => void;
 }
 
 const ChatMessage = ({
@@ -28,9 +32,12 @@ const ChatMessage = ({
   timestamp,
   sender,
   isOwnMessage = false,
+  isLocked = false,
+  onUnlock,
 }: ChatMessageProps) => {
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
+  const { toast } = useToast();
 
   const toggleLike = () => {
     if (liked) {
@@ -39,6 +46,21 @@ const ChatMessage = ({
       setLikeCount(prev => prev + 1);
     }
     setLiked(!liked);
+  };
+
+  const handleUnlock = () => {
+    if (isLocked && onUnlock) {
+      // In a real implementation, here you would verify if the user has credits
+      // and then deduct them before unlocking the message
+      
+      // Simulating credit deduction
+      toast({
+        title: "Message Unlocked",
+        description: "1 credit has been deducted from your balance.",
+      });
+      
+      onUnlock();
+    }
   };
 
   return (
@@ -89,8 +111,27 @@ const ChatMessage = ({
               ? 'bg-migblue text-white rounded-tr-none' 
               : 'bg-muted rounded-tl-none'
           }`}
+          onClick={isLocked ? handleUnlock : undefined}
         >
-          {content}
+          {isLocked ? (
+            <div className="flex items-center gap-2 cursor-pointer">
+              <Lock className="h-4 w-4" />
+              <span>{content}</span>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="ml-2 text-xs" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleUnlock();
+                }}
+              >
+                Unlock (1 credit)
+              </Button>
+            </div>
+          ) : (
+            content
+          )}
         </div>
         
         {likeCount > 0 && (

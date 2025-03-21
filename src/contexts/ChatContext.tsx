@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { handleApiError } from '@/utils/errorHandler';
+import { UserRole } from '@/utils/roleUtils';
 
 // Define types for our chat context
 export type Message = {
@@ -12,9 +13,12 @@ export type Message = {
   room_id: string;
   created_at: string;
   message_type?: string;
+  is_locked?: boolean;
   sender?: {
     username: string;
     avatar_url?: string;
+    is_vip?: boolean;
+    roles?: UserRole[];
   };
 };
 
@@ -36,7 +40,12 @@ type ChatContextType = {
   // Messages
   messages: Message[];
   loadingMessages: boolean;
-  sendMessage: (content: string, type?: string) => Promise<void>;
+  sendMessage: (content: string, type?: string, isLocked?: boolean) => Promise<void>;
+  
+  // Moderation
+  muteUser: (userId: string) => Promise<void>;
+  kickUser: (userId: string) => Promise<void>;
+  banUser: (userId: string) => Promise<void>;
   
   // Subscriptions
   subscribeToRoom: (roomId: string) => void;
@@ -98,7 +107,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       setLoadingMessages(true);
       const { data, error } = await supabase
         .from('chat_messages')
-        .select('*, profiles!chat_messages_sender_id_fkey(username, avatar_url)')
+        .select('*, profiles!chat_messages_sender_id_fkey(username, avatar_url, is_vip, roles)')
         .eq('room_id', roomId)
         .order('created_at', { ascending: false })
         .limit(50);
@@ -113,6 +122,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         room_id: msg.room_id,
         created_at: msg.created_at,
         message_type: msg.message_type,
+        is_locked: msg.is_locked,
         sender: msg.profiles
       }));
       
@@ -124,7 +134,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const sendMessage = async (content: string, type: string = 'text') => {
+  const sendMessage = async (content: string, type: string = 'text', isLocked: boolean = false) => {
     if (!user || !currentRoom) return;
 
     try {
@@ -134,12 +144,72 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
           content, 
           sender_id: user.id, 
           room_id: currentRoom.id,
-          message_type: type
+          message_type: type,
+          is_locked: isLocked
         }]);
         
       if (error) throw error;
     } catch (error) {
       handleApiError(error, { title: "Failed to send message" });
+    }
+  };
+
+  // Moderation functions
+  const muteUser = async (userId: string) => {
+    if (!currentRoom || !user) return;
+    
+    try {
+      // Add record to muted_users table
+      const { error } = await supabase
+        .from('muted_users')
+        .insert([{ 
+          user_id: userId, 
+          room_id: currentRoom.id,
+          muted_by: user.id,
+          expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString() // 1 hour mute by default
+        }]);
+        
+      if (error) throw error;
+    } catch (error) {
+      handleApiError(error, { title: "Failed to mute user" });
+    }
+  };
+
+  const kickUser = async (userId: string) => {
+    if (!currentRoom || !user) return;
+    
+    try {
+      // Add record to kicked_users table
+      const { error } = await supabase
+        .from('kicked_users')
+        .insert([{ 
+          user_id: userId, 
+          room_id: currentRoom.id,
+          kicked_by: user.id
+        }]);
+        
+      if (error) throw error;
+    } catch (error) {
+      handleApiError(error, { title: "Failed to kick user" });
+    }
+  };
+
+  const banUser = async (userId: string) => {
+    if (!currentRoom || !user) return;
+    
+    try {
+      // Add record to banned_users table
+      const { error } = await supabase
+        .from('banned_users')
+        .insert([{ 
+          user_id: userId, 
+          room_id: currentRoom.id,
+          banned_by: user.id
+        }]);
+        
+      if (error) throw error;
+    } catch (error) {
+      handleApiError(error, { title: "Failed to ban user" });
     }
   };
 
@@ -161,7 +231,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         // Fetch user info for the new message
         const { data: userData } = await supabase
           .from('profiles')
-          .select('username, avatar_url')
+          .select('username, avatar_url, is_vip, roles')
           .eq('id', payload.new.sender_id)
           .single();
         
@@ -172,6 +242,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
           room_id: payload.new.room_id,
           created_at: payload.new.created_at,
           message_type: payload.new.message_type,
+          is_locked: payload.new.is_locked,
           sender: userData
         };
         
@@ -199,6 +270,9 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         messages,
         loadingMessages,
         sendMessage,
+        muteUser,
+        kickUser,
+        banUser,
         subscribeToRoom,
         unsubscribeFromRoom
       }}

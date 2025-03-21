@@ -33,11 +33,44 @@ export type Database = {
         }
         Relationships: []
       }
+      banned_users: {
+        Row: {
+          banned_by: string | null
+          created_at: string | null
+          id: string
+          room_id: string
+          user_id: string
+        }
+        Insert: {
+          banned_by?: string | null
+          created_at?: string | null
+          id?: string
+          room_id: string
+          user_id: string
+        }
+        Update: {
+          banned_by?: string | null
+          created_at?: string | null
+          id?: string
+          room_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "banned_users_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "chat_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_messages: {
         Row: {
           content: string
           created_at: string | null
           id: string
+          is_locked: boolean | null
           message_type: string | null
           room_id: string | null
           sender_id: string | null
@@ -46,6 +79,7 @@ export type Database = {
           content: string
           created_at?: string | null
           id?: string
+          is_locked?: boolean | null
           message_type?: string | null
           room_id?: string | null
           sender_id?: string | null
@@ -54,6 +88,7 @@ export type Database = {
           content?: string
           created_at?: string | null
           id?: string
+          is_locked?: boolean | null
           message_type?: string | null
           room_id?: string | null
           sender_id?: string | null
@@ -373,6 +408,38 @@ export type Database = {
         }
         Relationships: []
       }
+      kicked_users: {
+        Row: {
+          created_at: string | null
+          id: string
+          kicked_by: string | null
+          room_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          kicked_by?: string | null
+          room_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          kicked_by?: string | null
+          room_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kicked_users_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "chat_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       merchant_transactions: {
         Row: {
           amount: number
@@ -414,6 +481,41 @@ export type Database = {
             columns: ["merchant_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      muted_users: {
+        Row: {
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          muted_by: string | null
+          room_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          muted_by?: string | null
+          room_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          muted_by?: string | null
+          room_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "muted_users_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "chat_rooms"
             referencedColumns: ["id"]
           },
         ]
@@ -472,6 +574,7 @@ export type Database = {
           content: string
           created_at: string | null
           id: string
+          is_locked: boolean | null
           is_read: boolean | null
           message_type: string | null
           sender_id: string | null
@@ -481,6 +584,7 @@ export type Database = {
           content: string
           created_at?: string | null
           id?: string
+          is_locked?: boolean | null
           is_read?: boolean | null
           message_type?: string | null
           sender_id?: string | null
@@ -490,6 +594,7 @@ export type Database = {
           content?: string
           created_at?: string | null
           id?: string
+          is_locked?: boolean | null
           is_read?: boolean | null
           message_type?: string | null
           sender_id?: string | null

@@ -4,12 +4,15 @@ import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { findOrCreatePrivateChat, getPrivateChatPartner } from "@/utils/supabaseHelpers";
 import { useToast } from "@/hooks/use-toast";
+import { UserRole } from "@/utils/roleUtils";
 
 export interface ChatPartner {
   id: string;
   username: string;
   avatar_url: string;
   status: string;
+  is_vip?: boolean;
+  roles?: UserRole[];
 }
 
 interface PrivateMessage {
@@ -17,9 +20,13 @@ interface PrivateMessage {
   content: string;
   sender_id: string;
   created_at: string;
+  message_type?: string;
+  is_locked?: boolean;
   sender?: {
     username: string;
     avatar_url?: string;
+    is_vip?: boolean;
+    roles?: UserRole[];
   };
 }
 
@@ -31,7 +38,7 @@ interface PrivateChatContextType {
   getChatPartner: (chatId: string) => Promise<ChatPartner | null>;
   messages: PrivateMessage[];
   loadingMessages: boolean;
-  sendMessage: (message: string, type?: string) => void;
+  sendMessage: (message: string, type?: string, isLocked?: boolean) => void;
   currentChat: { id: string; partner?: ChatPartner } | null;
   setCurrentChat: (chatId: string | null) => void;
 }
@@ -146,8 +153,10 @@ export const PrivateChatProvider = ({ children }: { children: ReactNode }) => {
             id, 
             content, 
             sender_id, 
-            created_at, 
-            sender:profiles(username, avatar_url)
+            created_at,
+            message_type,
+            is_locked,
+            sender:profiles(username, avatar_url, is_vip, roles)
           `)
           .eq("chat_id", currentChat.id)
           .order("created_at", { ascending: false });
@@ -183,7 +192,7 @@ export const PrivateChatProvider = ({ children }: { children: ReactNode }) => {
           // Fetch the sender info for the new message
           const { data: senderData } = await supabase
             .from("profiles")
-            .select("username, avatar_url")
+            .select("username, avatar_url, is_vip, roles")
             .eq("id", payload.new.sender_id)
             .single();
 
@@ -224,7 +233,7 @@ export const PrivateChatProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // Send a message in the current chat
-  const sendMessage = async (message: string, type: string = 'text') => {
+  const sendMessage = async (message: string, type: string = 'text', isLocked: boolean = false) => {
     if (!currentChat || !user) return;
 
     try {
@@ -233,6 +242,7 @@ export const PrivateChatProvider = ({ children }: { children: ReactNode }) => {
         sender_id: user.id,
         content: message,
         message_type: type,
+        is_locked: isLocked
       });
 
       if (error) throw error;

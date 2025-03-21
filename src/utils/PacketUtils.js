@@ -1,53 +1,42 @@
 
-// PacketUtils.js - Modern rewrite of a.java and b.java
-// Handles data serialization and message formatting
+// src/utils/PacketUtils.js
 
-export const serializePacket = (data) => {
-  const encoder = new TextEncoder();
-  return encoder.encode(JSON.stringify(data));
-};
-
-export const deserializePacket = (packet) => {
-  const decoder = new TextDecoder();
-  return JSON.parse(decoder.decode(packet));
-};
-
-// Format chat message with emoticons
-export const formatMessage = (message) => {
-  // Replace text emoticon patterns with emoji
-  const emoticons = {
-    ':)': '😊',
-    ':(': '😞',
-    ':D': '😃',
-    ':P': '😛',
-    ';)': '😉',
-    '<3': '❤️',
-    ':*': '😘',
-    ':/': '😕',
-    ':O': '😮',
-    ':o': '😮'
-  };
-  
-  let formattedMessage = message;
-  Object.entries(emoticons).forEach(([code, emoji]) => {
-    formattedMessage = formattedMessage.replace(new RegExp(code, 'g'), emoji);
-  });
-  
-  return formattedMessage;
-};
-
-// Parse message for commands - similar to mig33's command system
+/**
+ * Parse a command string into command and arguments
+ * @param {string} message - The message starting with '/'
+ * @returns {Object|null} - Command data or null if not a valid command
+ */
 export const parseCommand = (message) => {
   if (!message.startsWith('/')) return null;
   
-  const parts = message.split(' ');
-  const command = parts[0].substring(1).toLowerCase();
+  const parts = message.slice(1).split(' ');
+  const command = parts[0].toLowerCase();
   const args = parts.slice(1);
   
   return { command, args };
 };
 
-// Generate unique message ID (timestamp + random)
-export const generateMessageId = () => {
-  return `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+/**
+ * Format a message (e.g., handle special formatting like *action*)
+ * @param {string} message - The message to format
+ * @returns {string} - Formatted message
+ */
+export const formatMessage = (message) => {
+  // Handle /me action messages
+  if (message.startsWith('*') && message.endsWith('*')) {
+    return message; // Already formatted as action
+  }
+  
+  return message;
+};
+
+/**
+ * Check if the user has permissions for a specific action
+ * @param {Array} userRoles - Array of user roles
+ * @param {Array} requiredRoles - Array of required roles for the action
+ * @returns {boolean} - Whether the user has permission
+ */
+export const hasPermission = (userRoles, requiredRoles) => {
+  if (!userRoles || !requiredRoles) return false;
+  return userRoles.some(role => requiredRoles.includes(role));
 };

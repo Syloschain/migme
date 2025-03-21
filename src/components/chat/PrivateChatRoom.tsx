@@ -1,5 +1,5 @@
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -16,15 +16,6 @@ interface PrivateChatRoomProps {
   avatarUrl?: string;
 }
 
-interface MessageSender {
-  id?: string;
-  username: string;
-  avatar_url?: string;
-  avatarUrl?: string;
-  is_vip?: boolean;
-  roles?: UserRole[];
-}
-
 const PrivateChatRoom = ({
   chatId,
   userName,
@@ -34,6 +25,7 @@ const PrivateChatRoom = ({
   const { messages, loadingMessages, sendMessage, setCurrentChat } = usePrivateChat();
   const { user } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [revealedMessages, setRevealedMessages] = useState<string[]>([]);
 
   useEffect(() => {
     setCurrentChat(chatId);
@@ -44,10 +36,14 @@ const PrivateChatRoom = ({
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSendMessage = (message: string, type: string = 'text') => {
+  const handleSendMessage = (message: string, type: string = 'text', isLocked: boolean = false) => {
     if (message.trim()) {
-      sendMessage(message, type);
+      sendMessage(message, type, isLocked);
     }
+  };
+
+  const handleUnlockMessage = (messageId: string) => {
+    setRevealedMessages(prev => [...prev, messageId]);
   };
 
   const statusColors = {
@@ -105,7 +101,11 @@ const PrivateChatRoom = ({
               <ChatMessage
                 key={message.id}
                 id={message.id}
-                content={message.content}
+                content={
+                  message.is_locked && !revealedMessages.includes(message.id) 
+                  ? "🔒 This message is locked. Click to unlock." 
+                  : message.content
+                }
                 timestamp={new Date(message.created_at)}
                 sender={{
                   id: message.sender_id,
@@ -115,6 +115,8 @@ const PrivateChatRoom = ({
                   isVIP: message.sender?.is_vip || false,
                 }}
                 isOwnMessage={message.sender_id === user?.id}
+                isLocked={message.is_locked && !revealedMessages.includes(message.id)}
+                onUnlock={() => handleUnlockMessage(message.id)}
               />
             ))
           ) : (
