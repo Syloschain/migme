@@ -1,4 +1,3 @@
-
 /**
  * Utility functions for working with Supabase
  */
@@ -53,5 +52,45 @@ export const checkResourceAccess = async (tableName: string, id: string) => {
   } catch (error) {
     console.error(`Failed to check access for ${tableName} ${id}:`, error);
     return false;
+  }
+};
+
+/**
+ * Find or create a private chat between two users
+ * @param currentUserId The current user's ID
+ * @param otherUserId The other user's ID
+ */
+export const findOrCreatePrivateChat = async (currentUserId: string, otherUserId: string) => {
+  try {
+    // First check if a chat already exists
+    const { data: existingChat, error: fetchError } = await supabase
+      .from('private_chats')
+      .select('*')
+      .or(`user_one.eq.${currentUserId},user_two.eq.${currentUserId}`)
+      .or(`user_one.eq.${otherUserId},user_two.eq.${otherUserId}`)
+      .limit(1);
+    
+    if (fetchError) throw fetchError;
+    
+    // If a chat exists, return it
+    if (existingChat && existingChat.length > 0) {
+      return existingChat[0];
+    }
+    
+    // Otherwise, create a new chat
+    const { data: newChat, error: insertError } = await supabase
+      .from('private_chats')
+      .insert({
+        user_one: currentUserId,
+        user_two: otherUserId
+      })
+      .select()
+      .single();
+    
+    if (insertError) throw insertError;
+    return newChat;
+  } catch (error) {
+    console.error('Failed to find or create private chat:', error);
+    throw error;
   }
 };

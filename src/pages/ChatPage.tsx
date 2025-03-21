@@ -4,35 +4,31 @@ import Layout from "@/components/layout/Layout";
 import EnhancedChatRoom from "@/components/chat/EnhancedChatRoom";
 import ChatRoomList from "@/components/chat/ChatRoomList";
 import PrivateChatList from "@/components/chat/PrivateChatList";
-import PrivateChat from "@/components/chat/PrivateChat";
+import PrivateChatRoom from "@/components/chat/PrivateChatRoom";
 import OnlineUserCounter from "@/components/home/OnlineUserCounter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useChat } from "@/contexts/ChatContext";
+import { usePrivateChat } from "@/contexts/PrivateChatContext";
 
 const ChatPage = () => {
   const [chatMode, setChatMode] = useState<"public" | "private">("public");
-  const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
-
-  // Mock data for private chats
-  const privateContacts = [
-    { id: "1", name: "Sarah Johnson", status: "online" },
-    { id: "2", name: "Michael Chen", status: "busy" },
-    // ... more contacts could be added
-  ];
+  const [selectedPrivateChatId, setSelectedPrivateChatId] = useState<string | null>(null);
+  
+  const { rooms, currentRoom, setCurrentRoom } = useChat();
+  const { currentChat } = usePrivateChat();
 
   const handleSelectPrivateChat = (chatId: string) => {
-    setSelectedChatId(chatId);
+    setSelectedPrivateChatId(chatId);
     setChatMode("private");
   };
-
-  const currentPrivateChat = privateContacts.find(contact => contact.id === selectedChatId);
 
   return (
     <Layout>
       <div className="flex flex-col gap-4">
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold text-migblue-dark">Chat</h1>
-          <OnlineUserCounter count={145} />
+          <OnlineUserCounter count={rooms.length > 0 ? rooms[0].online_count || 0 : 0} />
         </div>
         
         <Tabs defaultValue="rooms" className="w-full" onValueChange={(value) => {
@@ -85,11 +81,21 @@ const ChatPage = () => {
               </div>
               <div className="md:col-span-2">
                 <Card className="shadow-md border-migblue-light/30 h-[calc(80vh-170px)]">
-                  <EnhancedChatRoom 
-                    roomName="Global Chat" 
-                    roomDescription="Chat with users from around the world" 
-                    onlineCount={145}
-                  />
+                  {currentRoom ? (
+                    <EnhancedChatRoom 
+                      roomId={currentRoom.id}
+                      roomName={currentRoom.name} 
+                      roomDescription={currentRoom.description} 
+                      onlineCount={currentRoom.online_count}
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-muted-foreground p-4 text-center">
+                      <div>
+                        <p>Select a room to start chatting</p>
+                        <p className="text-sm mt-2">Or create a new room</p>
+                      </div>
+                    </div>
+                  )}
                 </Card>
               </div>
             </div>
@@ -111,10 +117,12 @@ const ChatPage = () => {
               </div>
               <div className="md:col-span-2">
                 <Card className="shadow-md border-migblue-light/30 h-[calc(80vh-170px)]">
-                  {selectedChatId && currentPrivateChat ? (
-                    <PrivateChat 
-                      userName={currentPrivateChat.name} 
-                      status={currentPrivateChat.status as any}
+                  {currentChat ? (
+                    <PrivateChatRoom 
+                      chatId={currentChat.id}
+                      userName={currentChat.partner?.username || "Unknown"} 
+                      status={currentChat.partner?.status as any || "offline"}
+                      avatarUrl={currentChat.partner?.avatar_url}
                     />
                   ) : (
                     <div className="flex items-center justify-center h-full text-muted-foreground p-4 text-center">
