@@ -4,7 +4,6 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { ApiClient } from '@/services/ApiClient';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from "@/hooks/use-toast";
-import { getUserProfile } from "@/utils/supabaseHelpers";
 
 const AuthContext = createContext();
 
@@ -27,7 +26,7 @@ export const AuthProvider = ({ children }) => {
         // Fetch user profile when session changes
         if (newSession?.user) {
           try {
-            const profileData = await getUserProfile(newSession.user.id);
+            const profileData = await ApiClient.getProfile(newSession.user.id);
             setProfile(profileData);
           } catch (error) {
             console.error('Error fetching profile:', error);
@@ -61,7 +60,7 @@ export const AuthProvider = ({ children }) => {
         // Fetch user profile if session exists
         if (currentSession?.user) {
           try {
-            const profileData = await getUserProfile(currentSession.user.id);
+            const profileData = await ApiClient.getProfile(currentSession.user.id);
             setProfile(profileData);
           } catch (error) {
             console.error('Error fetching profile:', error);
@@ -113,7 +112,7 @@ export const AuthProvider = ({ children }) => {
     try {
       if (!user) throw new Error("User not authenticated");
       
-      const updatedProfile = await updateUserProfile(user.id, updates);
+      const updatedProfile = await ApiClient.updateProfile(user.id, updates);
       setProfile({...profile, ...updates});
       return { success: true, profile: updatedProfile };
     } catch (error) {

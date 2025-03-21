@@ -1,8 +1,81 @@
-
 // ApiClient.js
 import { supabase } from "@/integrations/supabase/client";
 
 export const ApiClient = {
+  // Auth operations
+  async signUp(email, password, username) {
+    const { data: authData, error: authError } = await supabase.auth.signUp({ 
+      email, 
+      password,
+      options: {
+        data: {
+          username
+        }
+      }
+    });
+
+    if (authError) throw authError;
+
+    // The profile will be created automatically via the database trigger
+    // But we need to ensure the username is set correctly
+    if (authData.user) {
+      try {
+        await supabase
+          .from('profiles')
+          .update({ username })
+          .eq('id', authData.user.id);
+      } catch (error) {
+        console.error("Error updating username:", error);
+        // We don't throw here since the auth user is already created
+      }
+    }
+
+    return authData;
+  },
+
+  async signIn(email, password) {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    return data;
+  },
+
+  async signOut() {
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+  },
+
+  async getSession() {
+    return supabase.auth.getSession();
+  },
+
+  onAuthStateChange(callback) {
+    return supabase.auth.onAuthStateChange((event, session) => {
+      callback(event, session);
+    });
+  },
+
+  // Profile operations
+  async getProfile(userId) {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  async updateProfile(userId, updates) {
+    const { data, error } = await supabase
+      .from('profiles')
+      .update(updates)
+      .eq('id', userId);
+
+    if (error) throw error;
+    return data;
+  },
+
   // Chat message operations
   async sendChatMessage({ roomId, userId, message }) {
     const { data, error } = await supabase
@@ -51,84 +124,9 @@ export const ApiClient = {
     return data;
   },
 
-  // User authentication
-  async signIn(email, password) {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
-    return data;
-  },
-
-  async signUp(email, password, username) {
-    // First, create the auth user
-    const { data: authData, error: authError } = await supabase.auth.signUp({ 
-      email, 
-      password,
-      options: {
-        data: {
-          username
-        }
-      }
-    });
-
-    if (authError) throw authError;
-
-    // The profile will be created automatically via the database trigger
-    // But we need to ensure the username is set correctly
-    if (authData.user) {
-      try {
-        await supabase
-          .from('profiles')
-          .update({ username })
-          .eq('id', authData.user.id);
-      } catch (error) {
-        console.error("Error updating username:", error);
-        // We don't throw here since the auth user is already created
-      }
-    }
-
-    return authData;
-  },
-
-  async signOut() {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
-  },
-
   // User session
   getCurrentUser() {
     return supabase.auth.getUser();
-  },
-
-  getSession() {
-    return supabase.auth.getSession();
-  },
-
-  onAuthStateChange(callback) {
-    return supabase.auth.onAuthStateChange((event, session) => {
-      callback(event, session);
-    });
-  },
-
-  // Profile operations
-  async getProfile(userId) {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
-
-    if (error) throw error;
-    return data;
-  },
-
-  async updateProfile(userId, updates) {
-    const { data, error } = await supabase
-      .from('profiles')
-      .update(updates)
-      .eq('id', userId);
-
-    if (error) throw error;
-    return data;
   },
 
   // Friends operations

@@ -3,16 +3,17 @@ import { useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { toast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/AuthContext";
 
 const formSchema = z.object({
-  username: z.string().min(3, {
-    message: "Username must be at least 3 characters.",
+  email: z.string().email({
+    message: "Please enter a valid email address.",
   }),
   password: z.string().min(6, {
     message: "Password must be at least 6 characters.",
@@ -23,11 +24,14 @@ type FormValues = z.infer<typeof formSchema>;
 
 const LoginForm = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const { signIn } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      username: "",
+      email: "",
       password: "",
     },
   });
@@ -35,23 +39,29 @@ const LoginForm = () => {
   const onSubmit = async (values: FormValues) => {
     setIsLoading(true);
     try {
-      // This would be replaced with actual auth logic
-      console.log("Login values:", values);
-      toast({
-        title: "Login successful",
-        description: "Welcome back to migme!",
-      });
-      // Simulate login delay
-      setTimeout(() => {
-        setIsLoading(false);
-      }, 1000);
+      const { success, error } = await signIn(values.email, values.password);
+      
+      if (success) {
+        toast({
+          title: "Login successful",
+          description: "Welcome back to migme!",
+        });
+        navigate('/chat');
+      } else {
+        toast({
+          title: "Login failed",
+          description: error || "Please check your credentials and try again.",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
-      setIsLoading(false);
       toast({
         title: "Login failed",
-        description: "Please check your credentials and try again.",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -60,7 +70,7 @@ const LoginForm = () => {
       <CardHeader>
         <CardTitle className="text-2xl text-center">Login to migme</CardTitle>
         <CardDescription className="text-center">
-          Enter your username and password to access your account
+          Enter your email and password to access your account
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -68,12 +78,12 @@ const LoginForm = () => {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="username"
+              name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Username</FormLabel>
+                  <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter your username" {...field} />
+                    <Input type="email" placeholder="Enter your email" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

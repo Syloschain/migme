@@ -3,12 +3,13 @@ import { useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { toast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/AuthContext";
 
 const formSchema = z.object({
   username: z.string().min(3, {
@@ -30,6 +31,9 @@ type FormValues = z.infer<typeof formSchema>;
 
 const SignupForm = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const { signUp } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -44,23 +48,29 @@ const SignupForm = () => {
   const onSubmit = async (values: FormValues) => {
     setIsLoading(true);
     try {
-      // This would be replaced with actual signup logic
-      console.log("Signup values:", values);
-      toast({
-        title: "Account created!",
-        description: "Welcome to migme!",
-      });
-      // Simulate signup delay
-      setTimeout(() => {
-        setIsLoading(false);
-      }, 1000);
+      const { success, error } = await signUp(values.email, values.password, values.username);
+      
+      if (success) {
+        toast({
+          title: "Account created!",
+          description: "Please check your email to verify your account.",
+        });
+        navigate('/login');
+      } else {
+        toast({
+          title: "Signup failed",
+          description: error || "There was an error creating your account.",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
-      setIsLoading(false);
       toast({
         title: "Signup failed",
-        description: "There was an error creating your account.",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
