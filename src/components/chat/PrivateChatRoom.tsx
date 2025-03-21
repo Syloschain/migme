@@ -6,12 +6,22 @@ import MessageInput from "./MessageInput";
 import ChatMessage from "./ChatMessage";
 import { usePrivateChat } from "@/contexts/PrivateChatContext";
 import { useAuth } from "@/context/AuthContext";
+import { UserRole } from "@/utils/roleUtils";
 
 interface PrivateChatRoomProps {
   chatId: string;
   userName: string;
   status?: string;
   avatarUrl?: string;
+}
+
+interface MessageSender {
+  id?: string;
+  username: string;
+  avatar_url?: string;
+  avatarUrl?: string;
+  is_vip?: boolean;
+  roles?: UserRole[];
 }
 
 const PrivateChatRoom = ({
@@ -24,13 +34,11 @@ const PrivateChatRoom = ({
   const { user } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Set current chat when component mounts
   useEffect(() => {
     setCurrentChat(chatId);
     return () => setCurrentChat(null);
   }, [chatId, setCurrentChat]);
   
-  // Scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);

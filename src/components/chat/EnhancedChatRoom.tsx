@@ -6,12 +6,22 @@ import ChatMessage from "./ChatMessage";
 import { useChat } from "@/contexts/ChatContext";
 import { useAuth } from "@/context/AuthContext";
 import { usePresence } from "@/hooks/use-presence";
+import { UserRole } from "@/utils/roleUtils";
 
 interface EnhancedChatRoomProps {
   roomId?: string;
   roomName: string;
   roomDescription?: string;
   onlineCount?: number;
+}
+
+interface MessageSender {
+  id?: string;
+  username: string;
+  avatar_url?: string;
+  avatarUrl?: string;
+  is_vip?: boolean;
+  roles?: UserRole[];
 }
 
 const EnhancedChatRoom = ({
@@ -25,7 +35,6 @@ const EnhancedChatRoom = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { onlineUsers } = usePresence(roomId);
   
-  // Scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
