@@ -1,3 +1,4 @@
+
 /**
  * Utility functions for working with Supabase
  */
@@ -56,41 +57,144 @@ export const checkResourceAccess = async (tableName: string, id: string) => {
 };
 
 /**
+ * Find an existing private chat between two users
+ * @param currentUserId The current user's ID
+ * @param otherUserId The other user's ID
+ */
+export const findPrivateChat = async (currentUserId: string, otherUserId: string) => {
+  try {
+    // Find chats where both users are participants
+    const { data: participantsData, error: participantsError } = await supabase
+      .from('private_chat_participants')
+      .select('chat_id')
+      .eq('profile_id', currentUserId);
+    
+    if (participantsError) throw participantsError;
+    
+    if (!participantsData || participantsData.length === 0) {
+      return null;
+    }
+    
+    const chatIds = participantsData.map(p => p.chat_id);
+    
+    // Check if the other user is also a participant in any of these chats
+    const { data: matchData, error: matchError } = await supabase
+      .from('private_chat_participants')
+      .select('chat_id')
+      .eq('profile_id', otherUserId)
+      .in('chat_id', chatIds);
+    
+    if (matchError) throw matchError;
+    
+    if (!matchData || matchData.length === 0) {
+      return null;
+    }
+    
+    // Return the first matching chat
+    const { data: chatData, error: chatError } = await supabase
+      .from('private_chats')
+      .select('*')
+      .eq('id', matchData[0].chat_id)
+      .single();
+    
+    if (chatError) throw chatError;
+    
+    return chatData;
+  } catch (error) {
+    console.error('Failed to find private chat:', error);
+    return null;
+  }
+};
+
+/**
+ * Create a new private chat between two users
+ * @param currentUserId The current user's ID
+ * @param otherUserId The other user's ID
+ */
+export const createPrivateChat = async (currentUserId: string, otherUserId: string) => {
+  try {
+    // Create a new chat
+    const { data: chatData, error: chatError } = await supabase
+      .from('private_chats')
+      .insert({})
+      .select()
+      .single();
+    
+    if (chatError) throw chatError;
+    
+    // Add participants
+    const participants = [
+      { chat_id: chatData.id, profile_id: currentUserId },
+      { chat_id: chatData.id, profile_id: otherUserId }
+    ];
+    
+    const { error: participantsError } = await supabase
+      .from('private_chat_participants')
+      .insert(participants);
+    
+    if (participantsError) throw participantsError;
+    
+    return chatData;
+  } catch (error) {
+    console.error('Failed to create private chat:', error);
+    throw error;
+  }
+};
+
+/**
  * Find or create a private chat between two users
  * @param currentUserId The current user's ID
  * @param otherUserId The other user's ID
  */
 export const findOrCreatePrivateChat = async (currentUserId: string, otherUserId: string) => {
   try {
-    // First check if a chat already exists
-    const { data: existingChat, error: fetchError } = await supabase
-      .from('private_chats')
-      .select('*')
-      .or(`user_one.eq.${currentUserId},user_two.eq.${currentUserId}`)
-      .or(`user_one.eq.${otherUserId},user_two.eq.${otherUserId}`)
-      .limit(1);
+    // First try to find existing chat
+    const existingChat = await findPrivateChat(currentUserId, otherUserId);
     
-    if (fetchError) throw fetchError;
-    
-    // If a chat exists, return it
-    if (existingChat && existingChat.length > 0) {
-      return existingChat[0];
+    if (existingChat) {
+      return existingChat;
     }
     
-    // Otherwise, create a new chat
-    const { data: newChat, error: insertError } = await supabase
-      .from('private_chats')
-      .insert({
-        user_one: currentUserId,
-        user_two: otherUserId
-      })
-      .select()
-      .single();
-    
-    if (insertError) throw insertError;
-    return newChat;
+    // Create new chat if none exists
+    return await createPrivateChat(currentUserId, otherUserId);
   } catch (error) {
     console.error('Failed to find or create private chat:', error);
     throw error;
+  }
+};
+
+/**
+ * Get the other participant in a private chat
+ * @param chatId The chat ID
+ * @param currentUserId The current user's ID
+ */
+export const getPrivateChatPartner = async (chatId: string, currentUserId: string) => {
+  try {
+    // Get all participants for this chat
+    const { data, error } = await supabase
+      .from('private_chat_participants')
+      .select(`
+        profiles:profile_id(
+          id, 
+          username, 
+          avatar_url, 
+          status
+        )
+      `)
+      .eq('chat_id', chatId);
+    
+    if (error) throw error;
+    
+    if (!data || data.length === 0) {
+      return null;
+    }
+    
+    // Filter out the current user to find the partner
+    const partner = data.find(p => p.profiles.id !== currentUserId);
+    
+    return partner ? partner.profiles : null;
+  } catch (error) {
+    console.error('Failed to get chat partner:', error);
+    return null;
   }
 };
