@@ -16,9 +16,10 @@ const emojiCategories = {
 
 interface EmojiPickerProps {
   onEmojiSelect: (emoji: string) => void;
+  disabled?: boolean;
 }
 
-const EmojiPicker = ({ onEmojiSelect }: EmojiPickerProps) => {
+const EmojiPicker = ({ onEmojiSelect, disabled = false }: EmojiPickerProps) => {
   const [open, setOpen] = useState(false);
 
   const handleEmojiClick = (emoji: string) => {
@@ -29,7 +30,7 @@ const EmojiPicker = ({ onEmojiSelect }: EmojiPickerProps) => {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground" disabled={disabled}>
           <Smile className="h-5 w-5" />
         </Button>
       </PopoverTrigger>
