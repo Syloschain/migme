@@ -2,19 +2,29 @@
 import { Coins } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { toast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/AuthContext";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 interface CreditBalanceWidgetProps {
-  credits?: number;
   className?: string;
 }
 
-const CreditBalanceWidget = ({ credits = 500, className }: CreditBalanceWidgetProps) => {
+const CreditBalanceWidget = ({ className }: CreditBalanceWidgetProps) => {
+  const { profile } = useAuth();
+  const [credits, setCredits] = useState(0);
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (profile && profile.credit_balance !== undefined) {
+      setCredits(profile.credit_balance);
+    }
+  }, [profile]);
+
   const handleBuyCredits = () => {
-    toast({
-      title: "Buy Credits",
-      description: "Credit purchase feature coming soon!",
-    });
+    navigate("/store");
   };
 
   return (
@@ -34,7 +44,7 @@ const CreditBalanceWidget = ({ credits = 500, className }: CreditBalanceWidgetPr
           </Button>
         </div>
         <div className="p-4 flex justify-between items-center">
-          <div className="text-2xl font-bold">{credits}</div>
+          <div className="text-2xl font-bold">{credits.toLocaleString()}</div>
           <div className="text-sm text-muted-foreground">Available Credits</div>
         </div>
       </CardContent>

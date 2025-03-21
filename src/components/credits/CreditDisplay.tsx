@@ -2,15 +2,28 @@
 import { Coins } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { useAuth } from "@/context/AuthContext";
+import { useState, useEffect } from "react";
 
 interface CreditDisplayProps {
-  credits: number;
+  credits?: number;
   showBuyButton?: boolean;
   size?: "sm" | "md" | "lg";
   className?: string;
 }
 
-const CreditDisplay = ({ credits, showBuyButton = true, size = "md", className }: CreditDisplayProps) => {
+const CreditDisplay = ({ showBuyButton = true, size = "md", className, credits: propCredits }: CreditDisplayProps) => {
+  const { profile } = useAuth();
+  const [credits, setCredits] = useState(propCredits || 0);
+
+  useEffect(() => {
+    if (profile && profile.credit_balance !== undefined) {
+      setCredits(profile.credit_balance);
+    } else if (propCredits !== undefined) {
+      setCredits(propCredits);
+    }
+  }, [profile, propCredits]);
+
   const sizeClasses = {
     sm: "text-xs",
     md: "text-sm",
@@ -52,8 +65,8 @@ const CreditDisplay = ({ credits, showBuyButton = true, size = "md", className }
       </HoverCard>
       
       {showBuyButton && (
-        <Button variant="outline" size="sm" className="h-7">
-          Buy Credits
+        <Button variant="outline" size="sm" className="h-7" asChild>
+          <a href="/store">Buy Credits</a>
         </Button>
       )}
     </div>
