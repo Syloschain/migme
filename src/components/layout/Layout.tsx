@@ -8,11 +8,13 @@ interface LayoutProps {
 
 const Layout = ({ children }: LayoutProps) => {
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="flex-1 container mx-auto p-4 pb-20 md:pb-6">
-        {children}
-      </main>
+      <div className="migme-section-gradient py-4">
+        <main className="flex-1 container mx-auto p-4 pb-20 md:pb-6">
+          {children}
+        </main>
+      </div>
       <MobileNav />
     </div>
   );

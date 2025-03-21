@@ -15,8 +15,11 @@ const Index = () => {
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Welcome Section */}
         <div className="flex flex-col gap-6">
-          <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold">Welcome to migme</h1>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+            <div className="space-y-2">
+              <h1 className="text-3xl font-bold text-migblue-dark">Welcome to migme</h1>
+              <p className="text-slate-600">Meet friends, chat and have fun!</p>
+            </div>
             <OnlineUserCounter />
           </div>
           
@@ -26,7 +29,7 @@ const Index = () => {
             </div>
             <div className="space-y-4">
               <CreditBalanceWidget />
-              <Card>
+              <Card className="shadow-md">
                 <CardContent className="p-4">
                   <LevelProgress
                     level={7}
@@ -41,53 +44,53 @@ const Index = () => {
 
         {/* Quick Access Links */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-          <Card>
+          <Card className="shadow-md">
             <CardContent className="p-4 flex flex-col items-center text-center gap-3">
-              <MessageSquare className="h-8 w-8 text-primary" />
+              <MessageSquare className="h-8 w-8 text-migblue" />
               <div>
                 <h3 className="font-semibold">Chat Rooms</h3>
                 <p className="text-sm text-muted-foreground">Join chat rooms and meet new friends</p>
               </div>
-              <Button variant="outline" className="w-full" asChild>
+              <Button variant="outline" className="w-full hover:bg-migblue hover:text-white border-migblue text-migblue" asChild>
                 <Link to="/chat">Start Chatting</Link>
               </Button>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="shadow-md">
             <CardContent className="p-4 flex flex-col items-center text-center gap-3">
-              <Users className="h-8 w-8 text-primary" />
+              <Users className="h-8 w-8 text-migblue" />
               <div>
                 <h3 className="font-semibold">Friends</h3>
                 <p className="text-sm text-muted-foreground">Connect with your network</p>
               </div>
-              <Button variant="outline" className="w-full" asChild>
+              <Button variant="outline" className="w-full hover:bg-migblue hover:text-white border-migblue text-migblue" asChild>
                 <Link to="/friends">View Friends</Link>
               </Button>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="shadow-md">
             <CardContent className="p-4 flex flex-col items-center text-center gap-3">
-              <Gift className="h-8 w-8 text-primary" />
+              <Gift className="h-8 w-8 text-migblue" />
               <div>
                 <h3 className="font-semibold">Gift Store</h3>
                 <p className="text-sm text-muted-foreground">Send virtual gifts to friends</p>
               </div>
-              <Button variant="outline" className="w-full" asChild>
+              <Button variant="outline" className="w-full hover:bg-migblue hover:text-white border-migblue text-migblue" asChild>
                 <Link to="/gifts">Browse Gifts</Link>
               </Button>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="shadow-md">
             <CardContent className="p-4 flex flex-col items-center text-center gap-3">
-              <Gamepad2 className="h-8 w-8 text-primary" />
+              <Gamepad2 className="h-8 w-8 text-migblue" />
               <div>
                 <h3 className="font-semibold">Games</h3>
                 <p className="text-sm text-muted-foreground">Play games and win credits</p>
               </div>
-              <Button variant="outline" className="w-full" asChild>
+              <Button variant="outline" className="w-full hover:bg-migblue hover:text-white border-migblue text-migblue" asChild>
                 <Link to="/games">Play Games</Link>
               </Button>
             </CardContent>
@@ -95,20 +98,20 @@ const Index = () => {
         </div>
 
         {/* News and Updates Section */}
-        <Card>
-          <CardHeader>
+        <Card className="shadow-md">
+          <CardHeader className="migme-header-gradient text-white">
             <CardTitle>Latest Updates</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="border-l-4 border-primary pl-4 py-2">
+          <CardContent className="space-y-4 p-4">
+            <div className="border-l-4 border-migblue pl-4 py-2">
               <div className="font-medium">New Trivia Categories Added!</div>
               <div className="text-sm text-muted-foreground">Check out our new music and movie trivia games</div>
             </div>
-            <div className="border-l-4 border-primary pl-4 py-2">
+            <div className="border-l-4 border-migblue pl-4 py-2">
               <div className="font-medium">Exclusive Valentine's Gifts Available</div>
               <div className="text-sm text-muted-foreground">Limited time Valentine's themed gift collection</div>
             </div>
-            <div className="border-l-4 border-primary pl-4 py-2">
+            <div className="border-l-4 border-migblue pl-4 py-2">
               <div className="font-medium">Weekend XP Boost Event</div>
               <div className="text-sm text-muted-foreground">Earn double XP points this weekend across all activities</div>
             </div>

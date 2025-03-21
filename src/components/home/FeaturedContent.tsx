@@ -53,11 +53,11 @@ const FeaturedContent = () => {
         <CarouselContent>
           {featuredItems.map((item) => (
             <CarouselItem key={item.id}>
-              <Card className={`border-none shadow-lg ${item.bgColor} text-white`}>
+              <Card className="border-none shadow-lg bg-migblue text-white">
                 <CardContent className="p-6 flex flex-col items-start gap-4 min-h-[180px]">
                   <h3 className="text-xl font-bold">{item.title}</h3>
                   <p className="text-white/80">{item.description}</p>
-                  <Button asChild variant="secondary" className="mt-auto bg-white/20 hover:bg-white/30 text-white">
+                  <Button asChild className="mt-auto migme-btn">
                     <Link to={item.link} className="flex items-center gap-2">
                       {item.linkText} <ArrowRight className="h-4 w-4" />
                     </Link>
