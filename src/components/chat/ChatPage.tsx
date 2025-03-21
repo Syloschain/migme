@@ -11,7 +11,7 @@ import PrivateChatRoom from "./PrivateChatRoom";
 
 const ChatPage = () => {
   const { user } = useAuth();
-  const { currentRoom, setCurrentRoom, joinRoom, leaveRoom } = useChat();
+  const { currentRoom, setCurrentRoom } = useChat();
   const [selectedPrivateChat, setSelectedPrivateChat] = useState<{
     id: string;
     userName: string;
@@ -20,10 +20,13 @@ const ChatPage = () => {
   } | null>(null);
 
   const handleRoomSelect = (roomId: string) => {
+    // If we have a current room and it's different from the selected one, 
+    // we need to "leave" the current room
     if (currentRoom && currentRoom.id !== roomId) {
-      leaveRoom();
+      setCurrentRoom(null);
     }
-    joinRoom(roomId);
+    // Set the new room (this is equivalent to "joining" it)
+    setCurrentRoom({ id: roomId, name: "", description: "" });
     setSelectedPrivateChat(null);
   };
 
@@ -35,7 +38,6 @@ const ChatPage = () => {
   }) => {
     setSelectedPrivateChat(chatData);
     if (currentRoom) {
-      leaveRoom();
       setCurrentRoom(null);
     }
   };

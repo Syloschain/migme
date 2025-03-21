@@ -1,284 +1,142 @@
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { supabase } from "@/integrations/supabase/client";
+import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { handleApiError } from '@/utils/errorHandler';
-import { findOrCreatePrivateChat } from '@/utils/supabaseHelpers';
+import { supabase } from "@/integrations/supabase/client";
+import { findOrCreatePrivateChat, getPrivateChatPartner } from "@/utils/supabaseHelpers";
+import { useToast } from "@/hooks/use-toast";
 
-// Define types for our private chat context
-export type PrivateMessage = {
-  id: string;
-  content: string;
-  sender_id: string;
-  chat_id: string;
-  created_at: string;
-  message_type?: string;
-  is_read?: boolean;
-  sender?: {
-    username: string;
-    avatar_url?: string;
-  };
-};
-
-type ChatPartner = {
+export interface ChatPartner {
   id: string;
   username: string;
-  avatar_url?: string;
-  status?: string;
-  last_message?: string;
-  last_message_time?: string;
-  unread_count?: number;
-};
+  avatar_url: string;
+  status: string;
+}
 
-type PrivateChatContextType = {
-  chatPartners: ChatPartner[];
-  loadingChatPartners: boolean;
-  currentChat: {
-    id: string;
-    partner: ChatPartner | null;
-  } | null;
-  messages: PrivateMessage[];
-  loadingMessages: boolean;
-  sendMessage: (content: string, type?: string) => Promise<void>;
-  startChat: (userId: string) => Promise<void>;
-  setCurrentChat: (chatId: string | null) => void;
-};
+interface PrivateChatContextType {
+  chatPartners: ChatPartner[] | null;
+  loadingPartners: boolean;
+  activeChats: string[];
+  startChat: (profileId: string) => Promise<string>;
+  getChatPartner: (chatId: string) => Promise<ChatPartner | null>;
+}
 
-// Create the context
-const PrivateChatContext = createContext<PrivateChatContextType | undefined>(undefined);
+const PrivateChatContext = createContext<PrivateChatContextType>({
+  chatPartners: null,
+  loadingPartners: true,
+  activeChats: [],
+  startChat: async () => "",
+  getChatPartner: async () => null,
+});
 
-// Provider component
+export const usePrivateChat = () => useContext(PrivateChatContext);
+
 export const PrivateChatProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
-  const [chatPartners, setChatPartners] = useState<ChatPartner[]>([]);
-  const [loadingChatPartners, setLoadingChatPartners] = useState(true);
-  const [messages, setMessages] = useState<PrivateMessage[]>([]);
-  const [loadingMessages, setLoadingMessages] = useState(false);
-  const [currentChat, setCurrentChatState] = useState<{
-    id: string;
-    partner: ChatPartner | null;
-  } | null>(null);
-  const [subscription, setSubscription] = useState<any>(null);
+  const { toast } = useToast();
+  const [chatPartners, setChatPartners] = useState<ChatPartner[] | null>(null);
+  const [loadingPartners, setLoadingPartners] = useState(true);
+  const [activeChats, setActiveChats] = useState<string[]>([]);
 
-  // Fetch chat partners
+  // Fetch all possible chat partners (all users except current user)
   useEffect(() => {
-    if (!user) return;
-    
-    const fetchChatPartners = async () => {
-      try {
-        setLoadingChatPartners(true);
-        
-        // Get all chats the user is part of
-        const { data: chats, error: chatsError } = await supabase
-          .from('private_chats')
-          .select('*, user_one:profiles!private_chats_user_one_fkey(id, username, avatar_url, status), user_two:profiles!private_chats_user_two_fkey(id, username, avatar_url, status)')
-          .or(`user_one.eq.${user.id},user_two.eq.${user.id}`);
-        
-        if (chatsError) throw chatsError;
-        
-        if (!chats) {
-          setChatPartners([]);
-          return;
-        }
-        
-        // For each chat, determine who the partner is
-        const partners = chats.map(chat => {
-          const partner = chat.user_one.id === user.id ? chat.user_two : chat.user_one;
-          return {
-            id: partner.id,
-            username: partner.username,
-            avatar_url: partner.avatar_url,
-            status: partner.status,
-            chatId: chat.id,
-            // We'll fetch these later or through another query if needed
-            last_message: "",
-            last_message_time: chat.updated_at,
-            unread_count: 0
-          };
-        });
-        
-        setChatPartners(partners);
-      } catch (error) {
-        handleApiError(error, { title: "Failed to load chat partners" });
-      } finally {
-        setLoadingChatPartners(false);
-      }
-    };
+    if (user) {
+      const fetchChatPartners = async () => {
+        try {
+          const { data, error } = await supabase
+            .from("profiles")
+            .select("id, username, avatar_url, status")
+            .neq("id", user.id);
 
-    fetchChatPartners();
+          if (error) throw error;
+          setChatPartners(data as ChatPartner[]);
+        } catch (error) {
+          console.error("Error fetching chat partners:", error);
+          toast({
+            title: "Error",
+            description: "Failed to load contacts. Please try again later.",
+            variant: "destructive",
+          });
+        } finally {
+          setLoadingPartners(false);
+        }
+      };
+
+      fetchChatPartners();
+    }
+  }, [user, toast]);
+
+  // Fetch active chats for the current user
+  useEffect(() => {
+    if (user) {
+      const fetchActiveChats = async () => {
+        try {
+          const { data, error } = await supabase
+            .from("private_chat_participants")
+            .select("chat_id")
+            .eq("profile_id", user.id);
+
+          if (error) throw error;
+          setActiveChats(data.map((item) => item.chat_id));
+        } catch (error) {
+          console.error("Error fetching active chats:", error);
+        }
+      };
+
+      fetchActiveChats();
+
+      // Set up realtime subscription for new chats
+      const subscription = supabase
+        .channel("private-chat-changes")
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "private_chat_participants",
+            filter: `profile_id=eq.${user.id}`,
+          },
+          (payload) => {
+            setActiveChats((prev) => [...prev, payload.new.chat_id]);
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(subscription);
+      };
+    }
   }, [user]);
 
-  // Fetch messages when current chat changes
-  useEffect(() => {
-    if (!currentChat) return;
-    
-    const fetchMessages = async () => {
-      try {
-        setLoadingMessages(true);
-        const { data, error } = await supabase
-          .from('private_messages')
-          .select('*, profiles!private_messages_sender_id_fkey(username, avatar_url)')
-          .eq('chat_id', currentChat.id)
-          .order('created_at', { ascending: false })
-          .limit(50);
-        
-        if (error) throw error;
-        
-        // Transform the data to match our PrivateMessage type
-        const formattedMessages: PrivateMessage[] = data.map(msg => ({
-          id: msg.id,
-          content: msg.content,
-          sender_id: msg.sender_id,
-          chat_id: msg.chat_id,
-          created_at: msg.created_at,
-          message_type: msg.message_type,
-          is_read: msg.is_read,
-          sender: msg.profiles
-        }));
-        
-        setMessages(formattedMessages || []);
-      } catch (error) {
-        handleApiError(error, { title: "Failed to load messages" });
-      } finally {
-        setLoadingMessages(false);
-      }
-    };
-
-    fetchMessages();
-    setupSubscription(currentChat.id);
-
-    return () => {
-      unsubscribe();
-    };
-  }, [currentChat]);
-
-  const setupSubscription = (chatId: string) => {
-    unsubscribe();
-    
-    const newSubscription = supabase
-      .channel(`private-chat:${chatId}`)
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'private_messages',
-        filter: `chat_id=eq.${chatId}`
-      }, async (payload) => {
-        console.log('New private message received:', payload);
-        
-        // Fetch user info for the new message
-        const { data: userData } = await supabase
-          .from('profiles')
-          .select('username, avatar_url')
-          .eq('id', payload.new.sender_id)
-          .single();
-        
-        const newMessage: PrivateMessage = {
-          id: payload.new.id,
-          content: payload.new.content,
-          sender_id: payload.new.sender_id,
-          chat_id: payload.new.chat_id,
-          created_at: payload.new.created_at,
-          message_type: payload.new.message_type,
-          is_read: payload.new.is_read,
-          sender: userData
-        };
-        
-        setMessages(prev => [newMessage, ...prev]);
-      })
-      .subscribe();
-    
-    setSubscription(newSubscription);
-  };
-
-  const unsubscribe = () => {
-    if (subscription) {
-      supabase.removeChannel(subscription);
-      setSubscription(null);
+  // Start or find an existing chat with a user
+  const startChat = async (profileId: string): Promise<string> => {
+    if (!user) {
+      throw new Error("You must be logged in to start a chat");
     }
-  };
-
-  const sendMessage = async (content: string, type: string = 'text') => {
-    if (!user || !currentChat) return;
 
     try {
-      const { error } = await supabase
-        .from('private_messages')
-        .insert([{ 
-          content, 
-          sender_id: user.id, 
-          chat_id: currentChat.id,
-          message_type: type
-        }]);
-        
-      if (error) throw error;
-      
-      // Update the chat's updated_at timestamp
-      await supabase
-        .from('private_chats')
-        .update({ updated_at: new Date().toISOString() })
-        .eq('id', currentChat.id);
-      
+      const chat = await findOrCreatePrivateChat(user.id, profileId);
+      return chat.id;
     } catch (error) {
-      handleApiError(error, { title: "Failed to send message" });
+      console.error("Error starting chat:", error);
+      toast({
+        title: "Error",
+        description: "Failed to start chat. Please try again.",
+        variant: "destructive",
+      });
+      throw error;
     }
   };
 
-  const startChat = async (partnerUserId: string) => {
-    if (!user) return;
-    
+  // Get the other participant in a chat
+  const getChatPartner = async (chatId: string): Promise<ChatPartner | null> => {
+    if (!user) return null;
+
     try {
-      const chat = await findOrCreatePrivateChat(user.id, partnerUserId);
-      
-      // Find the partner info
-      const { data: partnerData, error: partnerError } = await supabase
-        .from('profiles')
-        .select('id, username, avatar_url, status')
-        .eq('id', partnerUserId)
-        .single();
-      
-      if (partnerError) throw partnerError;
-      
-      const partner: ChatPartner = {
-        id: partnerData.id,
-        username: partnerData.username,
-        avatar_url: partnerData.avatar_url,
-        status: partnerData.status
-      };
-      
-      setCurrentChatState({
-        id: chat.id,
-        partner
-      });
-      
-      // Add partner to the list if not already there
-      setChatPartners(prev => {
-        if (!prev.find(p => p.id === partner.id)) {
-          return [...prev, { ...partner, chatId: chat.id }];
-        }
-        return prev;
-      });
+      const partner = await getPrivateChatPartner(chatId, user.id);
+      return partner;
     } catch (error) {
-      handleApiError(error, { title: "Failed to start chat" });
-    }
-  };
-
-  const setCurrentChat = (chatId: string | null) => {
-    if (!chatId) {
-      setCurrentChatState(null);
-      return;
-    }
-    
-    const partner = chatPartners.find(p => p.chatId === chatId);
-    if (partner) {
-      setCurrentChatState({
-        id: chatId,
-        partner: {
-          id: partner.id,
-          username: partner.username,
-          avatar_url: partner.avatar_url,
-          status: partner.status
-        }
-      });
+      console.error("Error getting chat partner:", error);
+      return null;
     }
   };
 
@@ -286,25 +144,13 @@ export const PrivateChatProvider = ({ children }: { children: ReactNode }) => {
     <PrivateChatContext.Provider
       value={{
         chatPartners,
-        loadingChatPartners,
-        currentChat,
-        messages,
-        loadingMessages,
-        sendMessage,
+        loadingPartners,
+        activeChats,
         startChat,
-        setCurrentChat
+        getChatPartner,
       }}
     >
       {children}
     </PrivateChatContext.Provider>
   );
-};
-
-// Custom hook to use the private chat context
-export const usePrivateChat = () => {
-  const context = useContext(PrivateChatContext);
-  if (context === undefined) {
-    throw new Error('usePrivateChat must be used within a PrivateChatProvider');
-  }
-  return context;
 };
