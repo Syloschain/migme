@@ -1,6 +1,6 @@
 
 import { Link } from "react-router-dom";
-import { User, MessageSquare, Users, Gift, Home, Gamepad2, Store } from "lucide-react";
+import { User, MessageSquare, Users, Gift, Home, Gamepad2, Store, CreditCard } from "lucide-react";
 
 const MobileNav = () => {
   return (
@@ -18,9 +18,9 @@ const MobileNav = () => {
           <Gamepad2 size={20} />
           <span className="text-xs mt-1">Games</span>
         </Link>
-        <Link to="/store" className="flex flex-col items-center p-2">
-          <Store size={20} />
-          <span className="text-xs mt-1">Store</span>
+        <Link to="/merchant" className="flex flex-col items-center p-2">
+          <CreditCard size={20} />
+          <span className="text-xs mt-1">Merchant</span>
         </Link>
         <Link to="/profile" className="flex flex-col items-center p-2">
           <User size={20} />

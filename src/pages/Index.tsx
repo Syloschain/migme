@@ -2,7 +2,7 @@
 import { Link } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, Users, Gift, Gamepad2 } from "lucide-react";
+import { MessageSquare, Users, Gift, Gamepad2, CreditCard } from "lucide-react";
 import LevelProgress from "@/components/profile/LevelProgress";
 import CreditBalanceWidget from "@/components/credits/CreditBalanceWidget";
 import FeaturedContent from "@/components/home/FeaturedContent"; 
@@ -43,7 +43,7 @@ const Index = () => {
         </div>
 
         {/* Quick Access Links */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
           <Card className="shadow-md">
             <CardContent className="p-4 flex flex-col items-center text-center gap-3">
               <MessageSquare className="h-8 w-8 text-migblue" />
@@ -95,6 +95,19 @@ const Index = () => {
               </Button>
             </CardContent>
           </Card>
+          
+          <Card className="shadow-md">
+            <CardContent className="p-4 flex flex-col items-center text-center gap-3">
+              <CreditCard className="h-8 w-8 text-migblue" />
+              <div>
+                <h3 className="font-semibold">Merchant</h3>
+                <p className="text-sm text-muted-foreground">Become a credit reseller</p>
+              </div>
+              <Button variant="outline" className="w-full hover:bg-migblue hover:text-white border-migblue text-migblue" asChild>
+                <Link to="/merchant">Join Program</Link>
+              </Button>
+            </CardContent>
+          </Card>
         </div>
 
         {/* News and Updates Section */}
@@ -104,12 +117,12 @@ const Index = () => {
           </CardHeader>
           <CardContent className="space-y-4 p-4">
             <div className="border-l-4 border-migblue pl-4 py-2">
-              <div className="font-medium">New Trivia Categories Added!</div>
-              <div className="text-sm text-muted-foreground">Check out our new music and movie trivia games</div>
+              <div className="font-medium">New Merchant Program Launched!</div>
+              <div className="text-sm text-muted-foreground">Become a credit reseller and earn commissions on sales</div>
             </div>
             <div className="border-l-4 border-migblue pl-4 py-2">
-              <div className="font-medium">Exclusive Valentine's Gifts Available</div>
-              <div className="text-sm text-muted-foreground">Limited time Valentine's themed gift collection</div>
+              <div className="font-medium">New Trivia Categories Added!</div>
+              <div className="text-sm text-muted-foreground">Check out our new music and movie trivia games</div>
             </div>
             <div className="border-l-4 border-migblue pl-4 py-2">
               <div className="font-medium">Weekend XP Boost Event</div>

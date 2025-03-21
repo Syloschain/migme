@@ -1,6 +1,6 @@
 
 import { Link } from "react-router-dom";
-import { User, MessageSquare, Users, Gift, Home, LogOut, Store, Gamepad2 } from "lucide-react";
+import { User, MessageSquare, Users, Gift, Home, LogOut, Store, Gamepad2, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import CreditDisplay from "../credits/CreditDisplay";
 import NotificationIndicator from "./NotificationIndicator";
@@ -37,6 +37,10 @@ const Navbar = () => {
           <Link to="/store" className="flex items-center gap-1 hover:text-primary-foreground/80">
             <Store size={20} />
             <span>Store</span>
+          </Link>
+          <Link to="/merchant" className="flex items-center gap-1 hover:text-primary-foreground/80">
+            <CreditCard size={20} />
+            <span>Merchant</span>
           </Link>
           <Link to="/profile" className="flex items-center gap-1 hover:text-primary-foreground/80">
             <User size={20} />
