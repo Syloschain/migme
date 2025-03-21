@@ -43,14 +43,16 @@ const RoleManagement = () => {
       // Update query to handle potential missing is_supermentor column
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, username, roles, is_admin, is_mentor, is_merchant, is_moderator, is_owner');
+        .select('id, username, roles, is_admin, is_mentor, is_merchant, is_moderator, is_owner, is_supermentor');
       
       if (error) throw error;
       
-      // Process the data to add is_supermentor property based on roles array
+      // Process the data to handle potential missing is_supermentor property
       const processedData = (data || []).map(user => ({
         ...user,
-        is_supermentor: user.roles?.includes('supermentor') || false
+        is_supermentor: user.is_supermentor !== undefined 
+          ? user.is_supermentor 
+          : user.roles?.includes('supermentor') || false
       }));
       
       setUsers(processedData);

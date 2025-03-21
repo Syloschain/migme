@@ -149,7 +149,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   
   // Check if the current user is a SuperMentor
   const isSuperMentor = (): boolean => {
-    return profile?.roles?.includes('supermentor') || false;
+    return profile?.roles?.includes('supermentor') || profile?.is_supermentor || false;
   };
   
   // Check if the current user is a moderator of a specific room

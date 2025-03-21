@@ -646,6 +646,7 @@ export type Database = {
           is_merchant: boolean | null
           is_moderator: boolean | null
           is_owner: boolean | null
+          is_supermentor: boolean | null
           is_vip: boolean | null
           level: number | null
           merchant_credits: number | null
@@ -666,6 +667,7 @@ export type Database = {
           is_merchant?: boolean | null
           is_moderator?: boolean | null
           is_owner?: boolean | null
+          is_supermentor?: boolean | null
           is_vip?: boolean | null
           level?: number | null
           merchant_credits?: number | null
@@ -686,6 +688,7 @@ export type Database = {
           is_merchant?: boolean | null
           is_moderator?: boolean | null
           is_owner?: boolean | null
+          is_supermentor?: boolean | null
           is_vip?: boolean | null
           level?: number | null
           merchant_credits?: number | null
@@ -829,6 +832,10 @@ export type Database = {
         }
         Returns: string
       }
+      update_supermentor_flags: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       update_user_role: {
         Args: {
           target_user: string
@@ -846,6 +853,7 @@ export type Database = {
         | "mentor"
         | "merchant"
         | "user"
+        | "supermentor"
     }
     CompositeTypes: {
       [_ in never]: never
