@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import Layout from '@/components/layout/Layout';
 
 const AppWrapper = ({ children }) => {
-  const { user, loading } = useAuth();
+  const { user, loading, profile } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -19,7 +19,10 @@ const AppWrapper = ({ children }) => {
       // Update user status to online when they log in
       const updateStatus = async () => {
         try {
-          await ApiClient.updateProfile(user.id, { status: 'online' });
+          // Only update if profile exists
+          if (profile) {
+            await ApiClient.updateProfile(user.id, { status: 'online' });
+          }
         } catch (error) {
           console.error('Failed to update status:', error);
         }
@@ -32,7 +35,7 @@ const AppWrapper = ({ children }) => {
         // Use sendBeacon for more reliable delivery
         const status = { status: 'offline' };
         navigator.sendBeacon(
-          `${import.meta.env.SUPABASE_URL}/rest/v1/profiles?id=eq.${user.id}`,
+          `${import.meta.env.VITE_SUPABASE_URL || "https://hlqreaqifgamxusdufwp.supabase.co"}/rest/v1/profiles?id=eq.${user.id}`,
           JSON.stringify(status)
         );
       };
@@ -41,11 +44,13 @@ const AppWrapper = ({ children }) => {
       return () => {
         window.removeEventListener('beforeunload', handleBeforeUnload);
         // Update status to offline when component unmounts
-        ApiClient.updateProfile(user.id, { status: 'offline' })
-          .catch(error => console.error('Failed to update status:', error));
+        if (profile) {
+          ApiClient.updateProfile(user.id, { status: 'offline' })
+            .catch(error => console.error('Failed to update status:', error));
+        }
       };
     }
-  }, [user, loading, navigate, toast]);
+  }, [user, loading, navigate, toast, profile]);
 
   if (loading) {
     return (

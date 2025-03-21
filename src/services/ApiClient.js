@@ -59,6 +59,7 @@ export const ApiClient = {
   },
 
   async signUp(email, password, username) {
+    // First, create the auth user
     const { data: authData, error: authError } = await supabase.auth.signUp({ 
       email, 
       password,
@@ -70,6 +71,21 @@ export const ApiClient = {
     });
 
     if (authError) throw authError;
+
+    // The profile will be created automatically via the database trigger
+    // But we need to ensure the username is set correctly
+    if (authData.user) {
+      try {
+        await supabase
+          .from('profiles')
+          .update({ username })
+          .eq('id', authData.user.id);
+      } catch (error) {
+        console.error("Error updating username:", error);
+        // We don't throw here since the auth user is already created
+      }
+    }
+
     return authData;
   },
 

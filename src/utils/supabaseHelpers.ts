@@ -1,4 +1,3 @@
-
 // Importing types
 import { supabase } from "@/integrations/supabase/client";
 import { ChatPartner } from "@/contexts/PrivateChatContext";
@@ -88,4 +87,43 @@ export const getPrivateChatPartner = async (chatId: string, currentUserId: strin
   if (profileError) throw profileError;
   
   return partner as ChatPartner;
+};
+
+// Update or create user profile
+export const updateUserProfile = async (userId: string, updates: {
+  username?: string;
+  avatar_url?: string;
+  bio?: string;
+  status?: string;
+}) => {
+  const { data, error } = await supabase
+    .from('profiles')
+    .update(updates)
+    .eq('id', userId);
+  
+  if (error) throw error;
+  return data;
+};
+
+// Get user profile by ID
+export const getUserProfile = async (userId: string) => {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', userId)
+    .single();
+  
+  if (error) throw error;
+  return data;
+};
+
+// Get multiple user profiles by IDs
+export const getUserProfiles = async (userIds: string[]) => {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .in('id', userIds);
+  
+  if (error) throw error;
+  return data;
 };

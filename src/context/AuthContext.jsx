@@ -4,12 +4,14 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { ApiClient } from '@/services/ApiClient';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from "@/hooks/use-toast";
+import { getUserProfile } from "@/utils/supabaseHelpers";
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [session, setSession] = useState(null);
+  const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -17,10 +19,22 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     // Setup the auth state listener
     const { data: { subscription } } = ApiClient.onAuthStateChange(
-      (event, newSession) => {
+      async (event, newSession) => {
         console.log('Auth state changed:', event, newSession);
         setSession(newSession);
         setUser(newSession?.user || null);
+        
+        // Fetch user profile when session changes
+        if (newSession?.user) {
+          try {
+            const profileData = await getUserProfile(newSession.user.id);
+            setProfile(profileData);
+          } catch (error) {
+            console.error('Error fetching profile:', error);
+          }
+        } else {
+          setProfile(null);
+        }
         
         if (event === 'SIGNED_IN') {
           toast({
@@ -43,6 +57,17 @@ export const AuthProvider = ({ children }) => {
         const { data: { session: currentSession } } = await ApiClient.getSession();
         setSession(currentSession);
         setUser(currentSession?.user || null);
+        
+        // Fetch user profile if session exists
+        if (currentSession?.user) {
+          try {
+            const profileData = await getUserProfile(currentSession.user.id);
+            setProfile(profileData);
+          } catch (error) {
+            console.error('Error fetching profile:', error);
+          }
+        }
+        
         setLoading(false);
       } catch (error) {
         console.error('Error checking session:', error);
@@ -84,15 +109,29 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const updateProfile = async (updates) => {
+    try {
+      if (!user) throw new Error("User not authenticated");
+      
+      const updatedProfile = await updateUserProfile(user.id, updates);
+      setProfile({...profile, ...updates});
+      return { success: true, profile: updatedProfile };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  };
+
   return (
     <AuthContext.Provider 
       value={{ 
         user, 
         session,
+        profile,
         loading,
         signIn, 
         signUp, 
-        signOut, 
+        signOut,
+        updateProfile,
         isAuthenticated: !!user 
       }}
     >
