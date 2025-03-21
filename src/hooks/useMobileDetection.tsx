@@ -19,7 +19,7 @@ export const useMobileDetection = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  return isMobile;
+  return { isSmallScreen: isMobile };
 };
 
 export default useMobileDetection;
