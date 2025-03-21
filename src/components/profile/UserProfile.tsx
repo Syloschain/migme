@@ -1,18 +1,30 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Avatar } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Gift, UserPlus, MessageSquare } from "lucide-react";
+import { Edit, Gift, UserPlus, MessageSquare, Users, Calendar } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import VIPBadge from "@/components/profile/VIPBadge";
+import AvatarCustomizer from "@/components/profile/AvatarCustomizer";
+import BadgesDisplay from "@/components/profile/BadgesDisplay";
+import UserStats from "@/components/profile/UserStats";
+import { useState } from "react";
+import { defaultBadges } from "@/components/profile/BadgesDisplay";
 
 interface UserProfileProps {
   username?: string;
   isCurrentUser?: boolean;
+  isVIP?: boolean;
 }
 
-const UserProfile = ({ username = "migUser42", isCurrentUser = true }: UserProfileProps) => {
+const UserProfile = ({ 
+  username = "migUser42", 
+  isCurrentUser = true,
+  isVIP = false 
+}: UserProfileProps) => {
   const userLevel = 15;
+  const [avatarUrl, setAvatarUrl] = useState<string | undefined>(undefined);
   
   return (
     <div className="space-y-6">
@@ -21,13 +33,18 @@ const UserProfile = ({ username = "migUser42", isCurrentUser = true }: UserProfi
           <div className="flex justify-between items-start">
             <div className="flex items-center gap-4">
               <Avatar className="h-20 w-20 border-4 border-primary/20">
-                <div className="bg-primary text-primary-foreground flex items-center justify-center h-full w-full text-2xl font-bold">
-                  {username.substring(0, 2).toUpperCase()}
-                </div>
+                {avatarUrl ? (
+                  <AvatarImage src={avatarUrl} alt={username} />
+                ) : (
+                  <AvatarFallback className="bg-primary text-primary-foreground">
+                    {username.substring(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                )}
               </Avatar>
               <div>
                 <div className="flex items-center gap-2">
                   <CardTitle className="text-2xl">{username}</CardTitle>
+                  {isVIP && <VIPBadge />}
                   <Badge variant="outline" className="text-xs py-0 border-primary/20 text-primary">
                     Level {userLevel}
                   </Badge>
@@ -36,23 +53,27 @@ const UserProfile = ({ username = "migUser42", isCurrentUser = true }: UserProfi
                   Life is a game, I'm just playing to win 🎮
                 </p>
                 <div className="flex items-center gap-2 mt-2">
-                  <Badge variant="secondary" className="text-xs">
-                    Chatterbox
+                  <Badge variant="secondary" className="text-xs flex items-center gap-1">
+                    <Users className="h-3 w-3" /> 248 Friends
                   </Badge>
-                  <Badge variant="secondary" className="text-xs">
-                    Gift Master
-                  </Badge>
-                  <Badge variant="secondary" className="text-xs">
-                    Early Adopter
+                  <Badge variant="secondary" className="text-xs flex items-center gap-1">
+                    <Calendar className="h-3 w-3" /> Joined Jan 2023
                   </Badge>
                 </div>
               </div>
             </div>
             {isCurrentUser ? (
-              <Button variant="outline" size="sm" className="flex items-center gap-1">
-                <Edit size={16} />
-                <span>Edit Profile</span>
-              </Button>
+              <div className="flex gap-2">
+                <AvatarCustomizer
+                  username={username}
+                  currentAvatarUrl={avatarUrl}
+                  onSave={setAvatarUrl}
+                />
+                <Button variant="outline" size="sm" className="flex items-center gap-1">
+                  <Edit size={16} />
+                  <span>Edit Profile</span>
+                </Button>
+              </div>
             ) : (
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" className="flex items-center gap-1">
@@ -93,6 +114,7 @@ const UserProfile = ({ username = "migUser42", isCurrentUser = true }: UserProfi
               <TabsTrigger value="photos" className="flex-1">Photos</TabsTrigger>
               <TabsTrigger value="gifts" className="flex-1">Gifts</TabsTrigger>
               <TabsTrigger value="badges" className="flex-1">Badges</TabsTrigger>
+              <TabsTrigger value="stats" className="flex-1">Stats</TabsTrigger>
             </TabsList>
             <TabsContent value="posts" className="mt-4">
               <div className="space-y-4">
@@ -100,9 +122,9 @@ const UserProfile = ({ username = "migUser42", isCurrentUser = true }: UserProfi
                   <CardContent className="pt-4">
                     <div className="flex items-start gap-2">
                       <Avatar className="h-10 w-10">
-                        <div className="bg-primary text-primary-foreground flex items-center justify-center h-full w-full text-sm font-bold">
+                        <AvatarFallback className="bg-primary text-primary-foreground text-sm font-bold">
                           {username.substring(0, 2).toUpperCase()}
-                        </div>
+                        </AvatarFallback>
                       </Avatar>
                       <div>
                         <div className="font-medium">{username}</div>
@@ -118,9 +140,9 @@ const UserProfile = ({ username = "migUser42", isCurrentUser = true }: UserProfi
                   <CardContent className="pt-4">
                     <div className="flex items-start gap-2">
                       <Avatar className="h-10 w-10">
-                        <div className="bg-primary text-primary-foreground flex items-center justify-center h-full w-full text-sm font-bold">
+                        <AvatarFallback className="bg-primary text-primary-foreground text-sm font-bold">
                           {username.substring(0, 2).toUpperCase()}
-                        </div>
+                        </AvatarFallback>
                       </Avatar>
                       <div>
                         <div className="font-medium">{username}</div>
@@ -151,13 +173,10 @@ const UserProfile = ({ username = "migUser42", isCurrentUser = true }: UserProfi
               </div>
             </TabsContent>
             <TabsContent value="badges" className="mt-4">
-              <div className="grid grid-cols-4 gap-4">
-                {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                  <Badge key={i} variant="outline" className="flex items-center justify-center h-12">
-                    Achievement {i}
-                  </Badge>
-                ))}
-              </div>
+              <BadgesDisplay badges={defaultBadges} />
+            </TabsContent>
+            <TabsContent value="stats" className="mt-4">
+              <UserStats />
             </TabsContent>
           </Tabs>
         </CardContent>
