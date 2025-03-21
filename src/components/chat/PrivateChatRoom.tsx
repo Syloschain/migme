@@ -111,7 +111,7 @@ const PrivateChatRoom = ({
                   id: message.sender_id,
                   username: message.sender?.username || "Unknown User",
                   avatarUrl: message.sender?.avatar_url,
-                  roles: message.sender?.roles || ['user'],
+                  roles: message.sender?.roles as UserRole[] || ['user'],
                   isVIP: message.sender?.is_vip || false,
                 }}
                 isOwnMessage={message.sender_id === user?.id}

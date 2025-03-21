@@ -87,7 +87,7 @@ const EnhancedChatRoom = ({
                   username: message.sender?.username || "Unknown User",
                   avatarUrl: message.sender?.avatar_url,
                   isVIP: message.sender?.is_vip || false,
-                  roles: message.sender?.roles || ['user'],
+                  roles: message.sender?.roles as UserRole[] || ['user'],
                 }}
                 isOwnMessage={message.sender_id === user?.id}
               />
