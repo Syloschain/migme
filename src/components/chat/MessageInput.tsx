@@ -6,6 +6,7 @@ import { SendHorizonal, Mic, Image, Gift } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import EmojiPicker from "./EmojiPicker";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import VoiceRecorder from "./VoiceRecorder";
 
 interface MessageInputProps {
   onSendMessage: (message: string) => void;
@@ -13,6 +14,7 @@ interface MessageInputProps {
 
 const MessageInput = ({ onSendMessage }: MessageInputProps) => {
   const [message, setMessage] = useState("");
+  const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
   const { toast } = useToast();
 
   const handleSendMessage = () => {
@@ -34,10 +36,21 @@ const MessageInput = ({ onSendMessage }: MessageInputProps) => {
   };
 
   const handleVoiceClick = () => {
+    setShowVoiceRecorder(true);
+  };
+
+  const handleVoiceRecorded = (blob: Blob) => {
+    // In a real implementation, you would upload this blob to a server
+    // and send a voice message with the URL
     toast({
-      title: "Voice Message",
-      description: "Voice messages are coming soon!",
+      title: "Voice Message Recorded",
+      description: "Voice message sending is in development!",
     });
+    setShowVoiceRecorder(false);
+  };
+
+  const handleCancelVoice = () => {
+    setShowVoiceRecorder(false);
   };
 
   const handleImageClick = () => {
@@ -57,13 +70,20 @@ const MessageInput = ({ onSendMessage }: MessageInputProps) => {
   return (
     <div className="p-3 border-t bg-background/80">
       <div className="flex flex-col gap-2">
-        <Textarea
-          placeholder="Type your message here..."
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          onKeyDown={handleKeyDown}
-          className="min-h-[60px] resize-none border-migblue-light/40 focus-visible:ring-migblue"
-        />
+        {showVoiceRecorder ? (
+          <VoiceRecorder 
+            onVoiceRecorded={handleVoiceRecorded} 
+            onCancel={handleCancelVoice} 
+          />
+        ) : (
+          <Textarea
+            placeholder="Type your message here..."
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            onKeyDown={handleKeyDown}
+            className="min-h-[60px] resize-none border-migblue-light/40 focus-visible:ring-migblue"
+          />
+        )}
         <div className="flex justify-between items-center">
           <div className="flex gap-1">
             <ToggleGroup type="single" variant="outline">
@@ -86,6 +106,7 @@ const MessageInput = ({ onSendMessage }: MessageInputProps) => {
             <Button 
               onClick={handleSendMessage}
               className="bg-migblue hover:bg-migblue-dark"
+              disabled={showVoiceRecorder || !message.trim()}
             >
               <SendHorizonal className="h-4 w-4 mr-1" />
               Send
