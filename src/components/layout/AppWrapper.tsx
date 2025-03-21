@@ -1,5 +1,4 @@
-
-// AppWrapper.jsx - Container for the authenticated app
+// AppWrapper.tsx - Container for the authenticated app
 import React, { useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';

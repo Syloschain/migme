@@ -1,17 +1,31 @@
-
-// AuthContext.jsx
+// AuthContext.tsx
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { ApiClient } from '@/services/ApiClient';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from "@/hooks/use-toast";
 import { UserRole } from "@/utils/roleUtils";
 
-const AuthContext = createContext();
+interface AuthContextType {
+  user: any;
+  session: any;
+  profile: any;
+  loading: boolean;
+  signIn: (email: string, password: string) => Promise<{ success: boolean, session?: any, error?: string }>;
+  signUp: (email: string, password: string, username: string) => Promise<{ success: boolean, user?: any, error?: string }>;
+  signOut: () => Promise<{ success: boolean, error?: string }>;
+  updateProfile: (updates: any) => Promise<{ success: boolean, profile?: any, error?: string }>;
+  hasRole: (role: UserRole) => boolean;
+  isAdmin: () => boolean;
+  isRoomModerator: (roomId: string) => Promise<boolean>;
+  isAuthenticated: boolean;
+}
 
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [session, setSession] = useState(null);
-  const [profile, setProfile] = useState(null);
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<any>(null);
+  const [session, setSession] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -82,20 +96,20 @@ export const AuthProvider = ({ children }) => {
     };
   }, [navigate, toast]);
 
-  const signIn = async (email, password) => {
+  const signIn = async (email: string, password: string) => {
     try {
       const { session } = await ApiClient.signIn(email, password);
       return { success: true, session };
-    } catch (error) {
+    } catch (error: any) {
       return { success: false, error: error.message };
     }
   };
 
-  const signUp = async (email, password, username) => {
+  const signUp = async (email: string, password: string, username: string) => {
     try {
       const { user } = await ApiClient.signUp(email, password, username);
       return { success: true, user };
-    } catch (error) {
+    } catch (error: any) {
       return { success: false, error: error.message };
     }
   };
@@ -104,19 +118,19 @@ export const AuthProvider = ({ children }) => {
     try {
       await ApiClient.signOut();
       return { success: true };
-    } catch (error) {
+    } catch (error: any) {
       return { success: false, error: error.message };
     }
   };
 
-  const updateProfile = async (updates) => {
+  const updateProfile = async (updates: any) => {
     try {
       if (!user) throw new Error("User not authenticated");
       
       const updatedProfile = await ApiClient.updateProfile(user.id, updates);
       setProfile({...profile, ...updates});
       return { success: true, profile: updatedProfile };
-    } catch (error) {
+    } catch (error: any) {
       return { success: false, error: error.message };
     }
   };
@@ -166,4 +180,10 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = (): AuthContextType => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};

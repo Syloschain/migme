@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { ApiClient } from "@/services/ApiClient";
@@ -62,7 +61,6 @@ const RoleManagement = () => {
     try {
       await ApiClient.updateUserRole(userId, role, checked);
       
-      // Update local state
       setUsers(prevUsers => 
         prevUsers.map(user => {
           if (user.id === userId) {
