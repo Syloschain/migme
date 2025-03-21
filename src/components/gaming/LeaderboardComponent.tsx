@@ -19,6 +19,33 @@ interface LeaderboardEntry {
   winRate?: number;
 }
 
+// Helper functions moved outside components so they can be used by all components
+const getRankStyle = (rank: number) => {
+  switch(rank) {
+    case 1:
+      return "bg-amber-100 text-amber-800";
+    case 2:
+      return "bg-slate-100 text-slate-800";
+    case 3:
+      return "bg-orange-100 text-orange-800";
+    default:
+      return "bg-gray-100 text-gray-800";
+  }
+};
+
+const getRankIcon = (rank: number) => {
+  switch(rank) {
+    case 1:
+      return <Crown className="h-4 w-4 text-amber-500" />;
+    case 2:
+      return <Trophy className="h-4 w-4 text-slate-500" />;
+    case 3:
+      return <Star className="h-4 w-4 text-orange-500" />;
+    default:
+      return null;
+  }
+};
+
 const LeaderboardComponent = () => {
   const [activeTab, setActiveTab] = useState("daily");
   
@@ -136,32 +163,6 @@ const LeaderboardComponent = () => {
   const dailyLeaderboard = generateLeaderboardData("daily");
   const weeklyLeaderboard = generateLeaderboardData("weekly");
   const allTimeLeaderboard = generateLeaderboardData("alltime");
-  
-  const getRankStyle = (rank: number) => {
-    switch(rank) {
-      case 1:
-        return "bg-amber-100 text-amber-800";
-      case 2:
-        return "bg-slate-100 text-slate-800";
-      case 3:
-        return "bg-orange-100 text-orange-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-  
-  const getRankIcon = (rank: number) => {
-    switch(rank) {
-      case 1:
-        return <Crown className="h-4 w-4 text-amber-500" />;
-      case 2:
-        return <Trophy className="h-4 w-4 text-slate-500" />;
-      case 3:
-        return <Star className="h-4 w-4 text-orange-500" />;
-      default:
-        return null;
-    }
-  };
   
   return (
     <Card className="shadow-md w-full">
