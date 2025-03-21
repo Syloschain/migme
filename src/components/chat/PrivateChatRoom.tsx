@@ -1,4 +1,3 @@
-
 import { useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -100,9 +99,11 @@ const PrivateChatRoom = ({
                 content={message.content}
                 timestamp={new Date(message.created_at)}
                 sender={{
+                  id: message.sender_id,
                   username: message.sender?.username || "Unknown User",
                   avatarUrl: message.sender?.avatar_url,
-                  isVIP: false,
+                  roles: message.sender?.roles || ['user'],
+                  isVIP: message.sender?.is_vip || false,
                 }}
                 isOwnMessage={message.sender_id === user?.id}
               />

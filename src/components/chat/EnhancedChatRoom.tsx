@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -74,9 +73,11 @@ const EnhancedChatRoom = ({
                 content={message.content}
                 timestamp={new Date(message.created_at)}
                 sender={{
+                  id: message.sender_id,
                   username: message.sender?.username || "Unknown User",
                   avatarUrl: message.sender?.avatar_url,
-                  isVIP: false, // This should come from the message.sender object in a real implementation
+                  isVIP: message.sender?.is_vip || false,
+                  roles: message.sender?.roles || ['user'],
                 }}
                 isOwnMessage={message.sender_id === user?.id}
               />

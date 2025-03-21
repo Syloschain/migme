@@ -11,8 +11,12 @@ export const roleColors: Record<UserRole, string> = {
   user: '#0000FF',       // Blue
 };
 
-// Get color based on role priority: mentor > merchant > admin/owner/moderator > user
-export const getUserRoleColor = (roles: UserRole[] = ['user']): string => {
+// Get color based on role priority: 
+// mentor > merchant > admin/owner/moderator > user
+export const getUserRoleColor = (roles: UserRole[] = ['user'], isSelf: boolean = false): string => {
+  // If viewing self, return black (not in the roleColors map)
+  if (isSelf) return '#000000';
+  
   if (roles.includes('mentor')) return roleColors.mentor;
   if (roles.includes('merchant')) return roleColors.merchant;
   if (roles.some(role => ['admin', 'owner', 'moderator'].includes(role))) return roleColors.admin;

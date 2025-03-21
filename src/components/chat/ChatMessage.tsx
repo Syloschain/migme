@@ -12,6 +12,7 @@ interface ChatMessageProps {
   content: string;
   timestamp: Date;
   sender: {
+    id?: string; // Add sender id to determine if this message is from the current user
     username: string;
     avatarUrl?: string;
     level?: number;
@@ -60,6 +61,7 @@ const ChatMessage = ({
               roles={sender.roles || ['user']}
               showTooltip={true}
               className="text-xs py-0 px-1"
+              userId={sender.id} // Pass sender ID to determine if this is the current user
             />
             {sender.isVIP && (
               <span className="bg-migorange text-white text-[10px] px-1 py-0.5 rounded-sm font-bold">

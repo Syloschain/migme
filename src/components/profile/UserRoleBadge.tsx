@@ -2,21 +2,27 @@
 import { cn } from "@/lib/utils";
 import { getUserRoleColor, formatRoleName, UserRole } from "@/utils/roleUtils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useAuth } from "@/context/AuthContext";
 
 interface UserRoleBadgeProps {
   roles?: UserRole[];
   username: string;
   className?: string;
   showTooltip?: boolean;
+  userId?: string; // Added to check if this is the current user
 }
 
 const UserRoleBadge = ({ 
   roles = ['user'], 
   username, 
   className,
-  showTooltip = true
+  showTooltip = true,
+  userId
 }: UserRoleBadgeProps) => {
-  const color = getUserRoleColor(roles);
+  const { user } = useAuth();
+  const isSelf = userId === user?.id;
+  
+  const color = getUserRoleColor(roles, isSelf);
   
   const badgeContent = (
     <span 
