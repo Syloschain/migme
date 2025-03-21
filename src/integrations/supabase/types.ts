@@ -485,6 +485,24 @@ export type Database = {
           },
         ]
       }
+      migcredit_wallets: {
+        Row: {
+          balance: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          balance?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          balance?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       muted_users: {
         Row: {
           created_at: string | null
@@ -630,6 +648,7 @@ export type Database = {
           is_owner: boolean | null
           is_vip: boolean | null
           level: number | null
+          merchant_credits: number | null
           roles: Database["public"]["Enums"]["user_role"][] | null
           status: string | null
           total_xp: number | null
@@ -649,6 +668,7 @@ export type Database = {
           is_owner?: boolean | null
           is_vip?: boolean | null
           level?: number | null
+          merchant_credits?: number | null
           roles?: Database["public"]["Enums"]["user_role"][] | null
           status?: string | null
           total_xp?: number | null
@@ -668,6 +688,7 @@ export type Database = {
           is_owner?: boolean | null
           is_vip?: boolean | null
           level?: number | null
+          merchant_credits?: number | null
           roles?: Database["public"]["Enums"]["user_role"][] | null
           status?: string | null
           total_xp?: number | null
@@ -741,6 +762,42 @@ export type Database = {
           },
         ]
       }
+      virtual_gifts: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          image_url: string | null
+          is_limited: boolean | null
+          is_premium: boolean | null
+          name: string
+          price: number
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_limited?: boolean | null
+          is_premium?: boolean | null
+          name: string
+          price: number
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_limited?: boolean | null
+          is_premium?: boolean | null
+          name?: string
+          price?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -753,6 +810,24 @@ export type Database = {
           role: Database["public"]["Enums"]["user_role"]
         }
         Returns: undefined
+      }
+      generate_credits: {
+        Args: {
+          admin_id: string
+          target_user_id: string
+          amount: number
+        }
+        Returns: undefined
+      }
+      send_gift: {
+        Args: {
+          sender_id: string
+          receiver_id: string
+          gift_id: string
+          message?: string
+          is_public?: boolean
+        }
+        Returns: string
       }
       update_user_role: {
         Args: {

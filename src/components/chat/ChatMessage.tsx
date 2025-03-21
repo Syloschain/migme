@@ -8,6 +8,8 @@ import { useState } from "react";
 import { UserRole } from "@/utils/roleUtils";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/AuthContext";
+import { hasEnoughCredits, updateCreditBalance } from "@/utils/supabaseHelpers";
 
 interface ChatMessageProps {
   id: string;
@@ -38,6 +40,7 @@ const ChatMessage = ({
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const toggleLike = () => {
     if (liked) {
@@ -48,18 +51,39 @@ const ChatMessage = ({
     setLiked(!liked);
   };
 
-  const handleUnlock = () => {
-    if (isLocked && onUnlock) {
-      // In a real implementation, here you would verify if the user has credits
-      // and then deduct them before unlocking the message
-      
-      // Simulating credit deduction
-      toast({
-        title: "Message Unlocked",
-        description: "1 credit has been deducted from your balance.",
-      });
-      
-      onUnlock();
+  const handleUnlock = async () => {
+    if (isLocked && onUnlock && user?.id) {
+      try {
+        // Check if user has enough credits (1 credit to unlock)
+        const hasCredits = await hasEnoughCredits(user.id, 1);
+        
+        if (!hasCredits) {
+          toast({
+            title: "Insufficient Credits",
+            description: "You don't have enough credits to unlock this message.",
+            variant: "destructive",
+          });
+          return;
+        }
+        
+        // Deduct credits
+        await updateCreditBalance(user.id, -1);
+        
+        toast({
+          title: "Message Unlocked",
+          description: "1 credit has been deducted from your balance.",
+        });
+        
+        // Call the onUnlock callback to reveal the message
+        onUnlock();
+      } catch (error) {
+        console.error("Error unlocking message:", error);
+        toast({
+          title: "Error",
+          description: "Failed to unlock message. Please try again.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
