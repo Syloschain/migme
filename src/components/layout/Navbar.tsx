@@ -1,6 +1,6 @@
 
 import { Link } from "react-router-dom";
-import { User, MessageSquare, Users, Gift, Home, LogOut } from "lucide-react";
+import { User, MessageSquare, Users, Gift, Home, LogOut, Store, Gamepad2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import CreditDisplay from "../credits/CreditDisplay";
 import NotificationIndicator from "./NotificationIndicator";
@@ -22,6 +22,10 @@ const Navbar = () => {
             <MessageSquare size={20} />
             <span>Chat</span>
           </Link>
+          <Link to="/games" className="flex items-center gap-1 hover:text-primary-foreground/80">
+            <Gamepad2 size={20} />
+            <span>Games</span>
+          </Link>
           <Link to="/friends" className="flex items-center gap-1 hover:text-primary-foreground/80">
             <Users size={20} />
             <span>Friends</span>
@@ -29,6 +33,10 @@ const Navbar = () => {
           <Link to="/gifts" className="flex items-center gap-1 hover:text-primary-foreground/80">
             <Gift size={20} />
             <span>Gifts</span>
+          </Link>
+          <Link to="/store" className="flex items-center gap-1 hover:text-primary-foreground/80">
+            <Store size={20} />
+            <span>Store</span>
           </Link>
           <Link to="/profile" className="flex items-center gap-1 hover:text-primary-foreground/80">
             <User size={20} />
