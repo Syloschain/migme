@@ -16,6 +16,7 @@ import GamesPage from "./pages/GamesPage";
 import GameDetailsPage from "./pages/GameDetailsPage";
 import StorePage from "./pages/StorePage";
 import MerchantPage from "./pages/MerchantPage";
+import AdminPage from "./pages/AdminPage";
 import { AuthProvider } from "./context/AuthContext";
 import { ChatProvider } from "./contexts/ChatContext";
 import { PrivateChatProvider } from "./contexts/PrivateChatContext";
@@ -59,6 +60,10 @@ const App = () => (
                 <Route 
                   path="/profile" 
                   element={<AppWrapper><ProfilePage /></AppWrapper>} 
+                />
+                <Route 
+                  path="/admin" 
+                  element={<AppWrapper><AdminPage /></AppWrapper>} 
                 />
                 <Route 
                   path="/games" 

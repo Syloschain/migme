@@ -1,9 +1,11 @@
 
 import { format } from "date-fns";
 import UserAvatar from "../profile/UserAvatar";
+import UserRoleBadge from "../profile/UserRoleBadge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Heart } from "lucide-react";
 import { useState } from "react";
+import { UserRole } from "@/utils/roleUtils";
 
 interface ChatMessageProps {
   id: string;
@@ -13,6 +15,7 @@ interface ChatMessageProps {
     username: string;
     avatarUrl?: string;
     level?: number;
+    roles?: UserRole[];
     isVIP?: boolean;
   };
   isOwnMessage?: boolean;
@@ -52,7 +55,12 @@ const ChatMessage = ({
       <div className={`flex flex-col ${isOwnMessage ? 'items-end' : 'items-start'} max-w-[75%]`}>
         <div className="flex items-center gap-2 mb-1">
           <div className={`text-sm font-medium flex items-center gap-1 ${isOwnMessage ? 'order-2' : 'order-1'}`}>
-            {sender.username}
+            <UserRoleBadge 
+              username={sender.username} 
+              roles={sender.roles || ['user']}
+              showTooltip={true}
+              className="text-xs py-0 px-1"
+            />
             {sender.isVIP && (
               <span className="bg-migorange text-white text-[10px] px-1 py-0.5 rounded-sm font-bold">
                 VIP

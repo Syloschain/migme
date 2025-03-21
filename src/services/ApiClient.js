@@ -1,3 +1,4 @@
+
 // ApiClient.js
 import { supabase } from "@/integrations/supabase/client";
 import { processGameBet as processGameBetHelper } from "@/utils/supabaseHelpers";
@@ -75,6 +76,49 @@ export const ApiClient = {
 
     if (error) throw error;
     return data;
+  },
+
+  // Role management
+  async updateUserRole(targetUserId, role, addRole = true) {
+    const { data, error } = await supabase
+      .rpc('update_user_role', {
+        target_user: targetUserId,
+        role: role,
+        add_role: addRole
+      });
+
+    if (error) throw error;
+    return { success: true };
+  },
+
+  async assignRoomRole(roomId, userId, role) {
+    const { data, error } = await supabase
+      .rpc('assign_room_role', {
+        room_id: roomId,
+        target_user: userId,
+        role: role
+      });
+
+    if (error) throw error;
+    return { success: true };
+  },
+
+  async checkRoomRole(userId, roomId) {
+    const { data, error } = await supabase
+      .from('room_roles')
+      .select('role')
+      .eq('room_id', roomId)
+      .eq('user_id', userId);
+
+    if (error) throw error;
+    
+    const isOwner = data.some(r => r.role === 'owner');
+    const isModerator = data.some(r => r.role === 'moderator');
+    
+    return { 
+      is_owner: isOwner,
+      is_moderator: isModerator || isOwner // Owner has moderator privileges
+    };
   },
 
   // Chat message operations

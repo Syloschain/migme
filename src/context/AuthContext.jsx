@@ -4,6 +4,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { ApiClient } from '@/services/ApiClient';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from "@/hooks/use-toast";
+import { UserRole } from "@/utils/roleUtils";
 
 const AuthContext = createContext();
 
@@ -119,6 +120,29 @@ export const AuthProvider = ({ children }) => {
       return { success: false, error: error.message };
     }
   };
+  
+  // Check if the current user has a specific role
+  const hasRole = (role: UserRole): boolean => {
+    if (!profile || !profile.roles) return false;
+    return profile.roles.includes(role);
+  };
+  
+  // Check if the current user is an admin
+  const isAdmin = (): boolean => {
+    return profile?.is_admin || false;
+  };
+  
+  // Check if the current user is a moderator of a specific room
+  const isRoomModerator = async (roomId: string): Promise<boolean> => {
+    if (!user) return false;
+    try {
+      const result = await ApiClient.checkRoomRole(user.id, roomId);
+      return result.is_moderator || result.is_owner || profile?.is_admin;
+    } catch (error) {
+      console.error('Error checking room role:', error);
+      return false;
+    }
+  };
 
   return (
     <AuthContext.Provider 
@@ -131,6 +155,9 @@ export const AuthProvider = ({ children }) => {
         signUp, 
         signOut,
         updateProfile,
+        hasRole,
+        isAdmin,
+        isRoomModerator,
         isAuthenticated: !!user 
       }}
     >
