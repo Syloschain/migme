@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -63,20 +62,17 @@ const DiceGame = () => {
       const newOpponentDice = Math.floor(Math.random() * 6) + 1;
       setOpponentDice(newOpponentDice);
       
-      // Determine winner
+      // Determine winner - higher roll wins
       let result: "win" | "lose" | "draw";
-      let winAmount = 0;
       
       if (newPlayerDice > newOpponentDice) {
         result = "win";
-        winAmount = betAmount;
         toast({
           title: "You win!",
           description: `+${betAmount} credits earned`,
         });
       } else if (newPlayerDice < newOpponentDice) {
         result = "lose";
-        winAmount = -betAmount;
         toast({
           title: "You lose",
           description: `${betAmount} credits lost`,
@@ -84,7 +80,6 @@ const DiceGame = () => {
         });
       } else {
         result = "draw";
-        winAmount = 0;
         toast({
           title: "It's a draw!",
           description: "Your bet has been returned",
@@ -96,7 +91,7 @@ const DiceGame = () => {
       try {
         // Process the game bet
         const gameType = "dice";
-        await ApiClient.processGameBet(user.id, gameType, betAmount, result, winAmount);
+        await ApiClient.processGameBet(user.id, gameType, betAmount, result);
         
         // Refresh credit display
         setRefreshTrigger(prev => prev + 1);

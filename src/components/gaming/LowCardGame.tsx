@@ -1,11 +1,11 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
-import { ApiClient } from "@/services/ApiClient";
+import { processGameBet, getCreditBalance } from "@/utils/supabaseHelpers";
 import CreditDisplay from "../credits/CreditDisplay";
 
 interface CardProps {
@@ -70,21 +70,19 @@ const LowCardGame = () => {
       setOpponentCard(newOpponentCard);
       
       // Determine winner
+      // CORRECTED: Higher card wins in the original migme LowCard game
       const playerIndex = values.indexOf(newPlayerCard.value);
       const opponentIndex = values.indexOf(newOpponentCard.value);
       let result: "win" | "lose" | "draw";
-      let winAmount = 0;
       
-      if (playerIndex < opponentIndex) {
+      if (playerIndex > opponentIndex) {
         result = "win";
-        winAmount = betAmount;
         toast({
           title: "You win!",
           description: `+${betAmount} credits earned`,
         });
-      } else if (playerIndex > opponentIndex) {
+      } else if (playerIndex < opponentIndex) {
         result = "lose";
-        winAmount = -betAmount;
         toast({
           title: "You lose",
           description: `${betAmount} credits lost`,
@@ -92,7 +90,6 @@ const LowCardGame = () => {
         });
       } else {
         result = "draw";
-        winAmount = 0;
         toast({
           title: "It's a draw!",
           description: "Your bet has been returned",
@@ -104,7 +101,7 @@ const LowCardGame = () => {
       try {
         // Process the game bet
         const gameType = "lowcards";
-        await ApiClient.processGameBet(user.id, gameType, betAmount, result, winAmount);
+        await processGameBet(user.id, gameType, betAmount, result);
         
         // Refresh credit display
         setRefreshTrigger(prev => prev + 1);
@@ -160,7 +157,7 @@ const LowCardGame = () => {
       <CardHeader>
         <CardTitle>LowCards</CardTitle>
         <CardDescription>
-          Draw a card - lower card wins! Bet credits to win more.
+          Draw a card - higher card wins! Bet credits to win more.
         </CardDescription>
       </CardHeader>
       <CardContent>
