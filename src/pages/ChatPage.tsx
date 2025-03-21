@@ -14,12 +14,24 @@ import { usePrivateChat } from "@/contexts/PrivateChatContext";
 const ChatPage = () => {
   const [chatMode, setChatMode] = useState<"public" | "private">("public");
   const [selectedPrivateChatId, setSelectedPrivateChatId] = useState<string | null>(null);
+  const [selectedChatData, setSelectedChatData] = useState<{
+    id: string;
+    userName: string;
+    status?: string;
+    avatarUrl?: string;
+  } | null>(null);
   
   const { rooms, currentRoom, setCurrentRoom } = useChat();
   const { currentChat } = usePrivateChat();
 
-  const handleSelectPrivateChat = (chatId: string) => {
-    setSelectedPrivateChatId(chatId);
+  const handleSelectPrivateChat = (chatData: {
+    id: string;
+    userName: string;
+    status?: string;
+    avatarUrl?: string;
+  }) => {
+    setSelectedChatData(chatData);
+    setSelectedPrivateChatId(chatData.id);
     setChatMode("private");
   };
 
@@ -117,12 +129,12 @@ const ChatPage = () => {
               </div>
               <div className="md:col-span-2">
                 <Card className="shadow-md border-migblue-light/30 h-[calc(80vh-170px)]">
-                  {currentChat ? (
+                  {currentChat && selectedChatData ? (
                     <PrivateChatRoom 
-                      chatId={currentChat.id}
-                      userName={currentChat.partner?.username || "Unknown"} 
-                      status={currentChat.partner?.status as any || "offline"}
-                      avatarUrl={currentChat.partner?.avatar_url}
+                      chatId={selectedChatData.id}
+                      userName={selectedChatData.userName} 
+                      status={selectedChatData.status as any || "offline"}
+                      avatarUrl={selectedChatData.avatarUrl}
                     />
                   ) : (
                     <div className="flex items-center justify-center h-full text-muted-foreground p-4 text-center">

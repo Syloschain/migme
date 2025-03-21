@@ -26,7 +26,13 @@ const ChatPage = () => {
       setCurrentRoom(null);
     }
     // Set the new room (this is equivalent to "joining" it)
-    setCurrentRoom({ id: roomId, name: "", description: "" });
+    setCurrentRoom({ 
+      id: roomId, 
+      name: "", 
+      description: "",
+      is_public: true,
+      online_count: 0 
+    });
     setSelectedPrivateChat(null);
   };
 
@@ -55,7 +61,7 @@ const ChatPage = () => {
         <TabsContent value="public" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Card className="md:col-span-1">
-              <ChatRoomList onSelectRoom={handleRoomSelect} />
+              <ChatRoomList />
             </Card>
             
             <Card className="md:col-span-3">
