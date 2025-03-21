@@ -17,9 +17,17 @@ import GameDetailsPage from "./pages/GameDetailsPage";
 import StorePage from "./pages/StorePage";
 import MerchantPage from "./pages/MerchantPage";
 import { AuthProvider } from "./context/AuthContext";
+import { ChatProvider } from "./contexts/ChatContext"; // Import our new ChatContext
 import AppWrapper from "./components/layout/AppWrapper";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -28,47 +36,49 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/signup" element={<SignupPage />} />
-            
-            <Route 
-              path="/chat" 
-              element={<AppWrapper><ChatPage /></AppWrapper>} 
-            />
-            <Route 
-              path="/friends" 
-              element={<AppWrapper><FriendsPage /></AppWrapper>} 
-            />
-            <Route 
-              path="/gifts" 
-              element={<AppWrapper><GiftsPage /></AppWrapper>} 
-            />
-            <Route 
-              path="/profile" 
-              element={<AppWrapper><ProfilePage /></AppWrapper>} 
-            />
-            <Route 
-              path="/games" 
-              element={<AppWrapper><GamesPage /></AppWrapper>} 
-            />
-            <Route 
-              path="/games/:gameId" 
-              element={<AppWrapper><GameDetailsPage /></AppWrapper>} 
-            />
-            <Route 
-              path="/store" 
-              element={<AppWrapper><StorePage /></AppWrapper>} 
-            />
-            <Route 
-              path="/merchant" 
-              element={<AppWrapper><MerchantPage /></AppWrapper>} 
-            />
-            
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <ChatProvider>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/signup" element={<SignupPage />} />
+              
+              <Route 
+                path="/chat" 
+                element={<AppWrapper><ChatPage /></AppWrapper>} 
+              />
+              <Route 
+                path="/friends" 
+                element={<AppWrapper><FriendsPage /></AppWrapper>} 
+              />
+              <Route 
+                path="/gifts" 
+                element={<AppWrapper><GiftsPage /></AppWrapper>} 
+              />
+              <Route 
+                path="/profile" 
+                element={<AppWrapper><ProfilePage /></AppWrapper>} 
+              />
+              <Route 
+                path="/games" 
+                element={<AppWrapper><GamesPage /></AppWrapper>} 
+              />
+              <Route 
+                path="/games/:gameId" 
+                element={<AppWrapper><GameDetailsPage /></AppWrapper>} 
+              />
+              <Route 
+                path="/store" 
+                element={<AppWrapper><StorePage /></AppWrapper>} 
+              />
+              <Route 
+                path="/merchant" 
+                element={<AppWrapper><MerchantPage /></AppWrapper>} 
+              />
+              
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </ChatProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
