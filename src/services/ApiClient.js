@@ -1,5 +1,6 @@
 // ApiClient.js
 import { supabase } from "@/integrations/supabase/client";
+import { processGameBet as processGameBetHelper } from "@/utils/supabaseHelpers";
 
 export const ApiClient = {
   // Auth operations
@@ -234,44 +235,9 @@ export const ApiClient = {
   },
 
   // Process a game bet and update credits
-  async processGameBet(userId, gameType, betAmount, result, winAmount) {
-    // Create a credit transaction directly if needed
-    const transactionType = 'game_bet';
-    const description = `${gameType} game: ${result}`;
-    
+  async processGameBet(userId, gameType, betAmount, result) {
     try {
-      // Get game ID if needed
-      const { data: gameData } = await supabase
-        .from('games')
-        .select('id')
-        .eq('game_type', gameType)
-        .maybeSingle();
-        
-      const gameId = gameData?.id;
-      
-      // Create a transaction
-      const { error: transactionError } = await supabase
-        .from('credit_transactions')
-        .insert([{
-          profile_id: userId,
-          amount: winAmount,
-          transaction_type: transactionType,
-          description: description,
-          reference_id: gameId
-        }]);
-      
-      if (transactionError) throw transactionError;
-      
-      // Update user's balance
-      const { error: updateError } = await supabase
-        .rpc('update_credit_balance', {
-          user_id: userId,
-          amount: winAmount
-        });
-        
-      if (updateError) throw updateError;
-      
-      return true;
+      return await processGameBetHelper(userId, gameType, betAmount, result);
     } catch (error) {
       console.error("Error processing game bet:", error);
       throw error;

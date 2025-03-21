@@ -1,146 +1,51 @@
 
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Trophy, Award, Star, Medal, Target, Flame, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Medal } from "lucide-react";
 
-interface Achievement {
-  id: string;
-  name: string;
-  description: string;
-  icon: React.ReactNode;
-  progress: number;
-  completed: boolean;
-  reward: string;
-  category: "beginner" | "intermediate" | "advanced";
+interface GameAchievementsProps {
+  gameId?: string;
 }
 
-const GameAchievements = () => {
-  const achievements: Achievement[] = [
-    {
-      id: "a1",
-      name: "First Win",
-      description: "Win your first game",
-      icon: <Trophy className="h-5 w-5 text-migblue" />,
-      progress: 100,
-      completed: true,
-      reward: "10 Credits",
-      category: "beginner"
-    },
-    {
-      id: "a2",
-      name: "Trivia Master",
-      description: "Get a perfect score in Trivia",
-      icon: <Star className="h-5 w-5 text-amber-500" />,
-      progress: 60,
-      completed: false,
-      reward: "50 Credits",
-      category: "intermediate"
-    },
-    {
-      id: "a3",
-      name: "Card Shark",
-      description: "Win 10 LowCard games",
-      icon: <Award className="h-5 w-5 text-green-500" />,
-      progress: 40,
-      completed: false,
-      reward: "30 Credits + Card Shark Badge",
-      category: "intermediate"
-    },
-    {
-      id: "a4",
-      name: "Winning Streak",
-      description: "Win 5 games in a row",
-      icon: <Flame className="h-5 w-5 text-orange-500" />,
-      progress: 20,
-      completed: false,
-      reward: "100 Credits",
-      category: "advanced"
-    },
-    {
-      id: "a5",
-      name: "Lucky Seven",
-      description: "Get a score of 777 in Dice game",
-      icon: <Zap className="h-5 w-5 text-purple-500" />,
-      progress: 0,
-      completed: false,
-      reward: "77 Credits + Lucky Dice Badge",
-      category: "advanced"
-    },
-    {
-      id: "a6",
-      name: "Game Explorer",
-      description: "Play each game at least once",
-      icon: <Medal className="h-5 w-5 text-blue-500" />,
-      progress: 75,
-      completed: false,
-      reward: "25 Credits",
-      category: "beginner"
+const GameAchievements: React.FC<GameAchievementsProps> = ({ gameId }) => {
+  // This is a placeholder component that would be connected to your achievements system
+  // For now, we'll render some mock achievements
+  
+  const getMockAchievements = () => {
+    if (!gameId || gameId === 'all') return [];
+    
+    const achievements = [
+      { id: 1, name: "First Win", description: "Win your first game", completed: true },
+      { id: 2, name: "High Roller", description: "Bet 100 credits in a single game", completed: false },
+    ];
+    
+    if (gameId === 'dice') {
+      achievements.push({ id: 3, name: "Lucky Six", description: "Roll a 6 three times in a row", completed: false });
+    } else if (gameId === 'lowcards') {
+      achievements.push({ id: 4, name: "Royal Flush", description: "Win with the highest card 5 times", completed: true });
+    } else if (gameId === 'cricket') {
+      achievements.push({ id: 5, name: "Century Maker", description: "Score 100 runs in a single game", completed: false });
     }
-  ];
-
-  // Group achievements by category
-  const beginnerAchievements = achievements.filter(a => a.category === "beginner");
-  const intermediateAchievements = achievements.filter(a => a.category === "intermediate");
-  const advancedAchievements = achievements.filter(a => a.category === "advanced");
-
+    
+    return achievements;
+  };
+  
+  const achievements = getMockAchievements();
+  
+  if (!gameId || gameId === 'all' || achievements.length === 0) {
+    return null;
+  }
+  
   return (
-    <Card className="shadow-md">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Award className="h-5 w-5 text-migblue" />
-          Game Achievements
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <AchievementCategory 
-          title="Beginner" 
-          achievements={beginnerAchievements} 
-        />
-        
-        <AchievementCategory 
-          title="Intermediate" 
-          achievements={intermediateAchievements} 
-        />
-        
-        <AchievementCategory 
-          title="Advanced" 
-          achievements={advancedAchievements} 
-        />
-      </CardContent>
-    </Card>
-  );
-};
-
-const AchievementCategory = ({ 
-  title, 
-  achievements 
-}: { 
-  title: string;
-  achievements: Achievement[];
-}) => {
-  return (
-    <div>
-      <h3 className="font-medium text-sm text-muted-foreground mb-3">{title}</h3>
-      <div className="space-y-4">
+    <div className="mt-4">
+      <h3 className="text-lg font-medium mb-2">Achievements</h3>
+      <div className="space-y-2">
         {achievements.map(achievement => (
-          <div key={achievement.id} className="relative">
-            <div className="flex justify-between items-start mb-1">
-              <div className="flex items-center gap-2">
-                {achievement.icon}
-                <span className={`font-medium ${achievement.completed ? 'text-migblue' : ''}`}>
-                  {achievement.name}
-                </span>
-                {achievement.completed && (
-                  <Badge variant="outline" className="ml-2 border-green-500 text-green-600 text-xs">
-                    Completed
-                  </Badge>
-                )}
-              </div>
-              <div className="text-xs text-muted-foreground">{achievement.reward}</div>
-            </div>
-            <div className="text-xs text-muted-foreground mb-2">{achievement.description}</div>
-            <Progress value={achievement.progress} className="h-1.5" />
+          <div key={achievement.id} className="flex items-center gap-2">
+            <Medal size={16} className={achievement.completed ? "text-yellow-500" : "text-gray-400"} />
+            <span className="text-sm font-medium">{achievement.name}</span>
+            {achievement.completed && <Badge variant="outline" className="ml-auto">Completed</Badge>}
           </div>
         ))}
       </div>

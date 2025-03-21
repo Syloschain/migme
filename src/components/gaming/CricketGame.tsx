@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Cricket, Loader2 } from "lucide-react";
+import { Bat, Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import { ApiClient } from "@/services/ApiClient";
@@ -96,7 +96,7 @@ const CricketGame = () => {
   const renderScoreCard = (score: number | null, isPlayer: boolean) => {
     return (
       <div className="w-32 h-32 bg-white border-2 border-gray-200 rounded-md flex flex-col items-center justify-center shadow-sm">
-        <Cricket className="mb-2" size={24} />
+        <Bat className="mb-2" size={24} />
         <div className="text-sm font-medium">{isPlayer ? "Your Score" : "Opponent's Score"}</div>
         {score !== null ? (
           <div className="text-2xl font-bold">{score} runs</div>

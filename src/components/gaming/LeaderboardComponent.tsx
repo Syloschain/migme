@@ -1,169 +1,52 @@
 
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trophy } from "lucide-react";
-import LeaderboardEntry, { LeaderboardEntryData } from "./LeaderboardEntry";
+import React from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import LeaderboardEntry from "./LeaderboardEntry";
 
-const LeaderboardComponent = () => {
-  const [activeTab, setActiveTab] = useState("daily");
-  
-  const generateLeaderboardData = (prefix: string): LeaderboardEntryData[] => {
-    const baseData: LeaderboardEntryData[] = [
-      {
-        id: `${prefix}-1`,
-        rank: 1,
-        username: "GameMaster42",
-        avatarUrl: "/placeholder.svg",
-        score: prefix === "daily" ? 980 : prefix === "weekly" ? 4820 : 15750,
-        isVIP: true,
-        level: 30,
-        games: prefix === "daily" ? 12 : prefix === "weekly" ? 47 : 189,
-        winRate: 78
-      },
-      {
-        id: `${prefix}-2`,
-        rank: 2,
-        username: "CardShark",
-        avatarUrl: "/placeholder.svg",
-        score: prefix === "daily" ? 820 : prefix === "weekly" ? 4350 : 14200,
-        isVIP: false,
-        level: 28,
-        games: prefix === "daily" ? 10 : prefix === "weekly" ? 41 : 173,
-        winRate: 73
-      },
-      {
-        id: `${prefix}-3`,
-        rank: 3,
-        username: "TriviaMaster",
-        avatarUrl: "/placeholder.svg",
-        score: prefix === "daily" ? 790 : prefix === "weekly" ? 3890 : 13500,
-        isVIP: true,
-        level: 26,
-        games: prefix === "daily" ? 9 : prefix === "weekly" ? 37 : 162,
-        winRate: 71
-      },
-      {
-        id: `${prefix}-4`,
-        rank: 4,
-        username: "QuizWhiz",
-        avatarUrl: "/placeholder.svg",
-        score: prefix === "daily" ? 710 : prefix === "weekly" ? 3560 : 12800,
-        level: 24,
-        games: prefix === "daily" ? 8 : prefix === "weekly" ? 32 : 147,
-        winRate: 68
-      },
-      {
-        id: `${prefix}-5`,
-        rank: 5,
-        username: "DiceRoller99",
-        avatarUrl: "/placeholder.svg",
-        score: prefix === "daily" ? 680 : prefix === "weekly" ? 3200 : 11900,
-        level: 22,
-        games: prefix === "daily" ? 7 : prefix === "weekly" ? 29 : 132,
-        winRate: 64
-      },
-      {
-        id: `${prefix}-6`,
-        rank: 6,
-        username: "MigPlayer1",
-        avatarUrl: "/placeholder.svg",
-        score: prefix === "daily" ? 530 : prefix === "weekly" ? 2780 : 10500,
-        level: 19,
-        games: prefix === "daily" ? 6 : prefix === "weekly" ? 25 : 119,
-        winRate: 60
-      },
-      {
-        id: `${prefix}-7`,
-        rank: 7,
-        username: "LuckyStrike",
-        avatarUrl: "/placeholder.svg",
-        score: prefix === "daily" ? 490 : prefix === "weekly" ? 2450 : 9800,
-        level: 17,
-        games: prefix === "daily" ? 5 : prefix === "weekly" ? 22 : 104,
-        winRate: 56
-      },
-      {
-        id: `${prefix}-8`,
-        rank: 8,
-        username: "Winner123",
-        avatarUrl: "/placeholder.svg",
-        score: prefix === "daily" ? 470 : prefix === "weekly" ? 2150 : 8900,
-        isVIP: true,
-        level: 16,
-        games: prefix === "daily" ? 4 : prefix === "weekly" ? 19 : 97,
-        winRate: 53
-      },
-      {
-        id: `${prefix}-9`,
-        rank: 9,
-        username: "CurrentUser",
-        avatarUrl: "/placeholder.svg",
-        score: prefix === "daily" ? 350 : prefix === "weekly" ? 1840 : 7200,
-        level: 14,
-        games: prefix === "daily" ? 3 : prefix === "weekly" ? 16 : 85,
-        winRate: 50
-      },
-      {
-        id: `${prefix}-10`,
-        rank: 10,
-        username: "MigGamer456",
-        avatarUrl: "/placeholder.svg",
-        score: prefix === "daily" ? 320 : prefix === "weekly" ? 1680 : 6800,
-        level: 12,
-        games: prefix === "daily" ? 2 : prefix === "weekly" ? 14 : 75,
-        winRate: 45
-      }
-    ];
+interface LeaderboardComponentProps {
+  gameId?: string;
+}
+
+const LeaderboardComponent: React.FC<LeaderboardComponentProps> = ({ gameId }) => {
+  // Mock data for leaderboard
+  const getMockData = () => {
+    if (!gameId || gameId === 'all') return [];
     
-    return baseData;
+    // This would be replaced with actual API calls in a real implementation
+    return [
+      { rank: 1, username: "Player1", avatar: "/placeholder.svg", score: 1250 },
+      { rank: 2, username: "Player2", avatar: "/placeholder.svg", score: 980 },
+      { rank: 3, username: "Player3", avatar: "/placeholder.svg", score: 810 },
+      { rank: 4, username: "Player4", avatar: "/placeholder.svg", score: 740 },
+      { rank: 5, username: "Player5", avatar: "/placeholder.svg", score: 620 }
+    ];
   };
   
-  const dailyLeaderboard = generateLeaderboardData("daily");
-  const weeklyLeaderboard = generateLeaderboardData("weekly");
-  const allTimeLeaderboard = generateLeaderboardData("alltime");
+  const leaderboardData = getMockData();
+  
+  if (!gameId || gameId === 'all' || leaderboardData.length === 0) {
+    return null;
+  }
   
   return (
-    <Card className="shadow-md w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Trophy className="h-5 w-5 text-migblue" />
-          Game Leaderboards
-        </CardTitle>
-        <CardDescription>Top players across all migme games</CardDescription>
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg">Leaderboard</CardTitle>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="daily" onValueChange={setActiveTab}>
-          <TabsList className="w-full grid grid-cols-3 mb-4">
-            <TabsTrigger value="daily">Daily</TabsTrigger>
-            <TabsTrigger value="weekly">Weekly</TabsTrigger>
-            <TabsTrigger value="alltime">All Time</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="daily" className="space-y-4">
-            <LeaderboardList entries={dailyLeaderboard} />
-          </TabsContent>
-          
-          <TabsContent value="weekly" className="space-y-4">
-            <LeaderboardList entries={weeklyLeaderboard} />
-          </TabsContent>
-          
-          <TabsContent value="alltime" className="space-y-4">
-            <LeaderboardList entries={allTimeLeaderboard} />
-          </TabsContent>
-        </Tabs>
+        <div className="space-y-4">
+          {leaderboardData.map((entry) => (
+            <LeaderboardEntry
+              key={entry.rank}
+              rank={entry.rank}
+              username={entry.username}
+              avatar={entry.avatar}
+              score={entry.score}
+            />
+          ))}
+        </div>
       </CardContent>
     </Card>
-  );
-};
-
-const LeaderboardList = ({ entries }: { entries: LeaderboardEntryData[] }) => {
-  return (
-    <div className="space-y-2">
-      {entries.map((entry) => (
-        <LeaderboardEntry key={entry.id} entry={entry} />
-      ))}
-    </div>
   );
 };
 
