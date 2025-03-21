@@ -4,6 +4,7 @@
  */
 
 import { supabase } from "@/integrations/supabase/client";
+import { PostgrestError } from "@supabase/supabase-js";
 
 /**
  * Enable real-time notifications for a table
@@ -12,10 +13,17 @@ import { supabase } from "@/integrations/supabase/client";
 export const enableRealtimeForTable = async (tableName: string) => {
   try {
     // Set replica identity to full to ensure we get complete rows in change events
-    await supabase.rpc('set_replica_identity', { table: tableName, value: 'full' });
+    const { error: replicaError } = await supabase.rpc('set_replica_identity', { 
+      table: tableName, 
+      value: 'full' 
+    });
+    if (replicaError) throw replicaError;
     
     // Add the table to the realtime publication
-    await supabase.rpc('add_table_to_publication', { table: tableName });
+    const { error: pubError } = await supabase.rpc('add_table_to_publication', { 
+      table: tableName 
+    });
+    if (pubError) throw pubError;
     
     console.log(`Realtime enabled for table: ${tableName}`);
     return true;
@@ -32,8 +40,11 @@ export const enableRealtimeForTable = async (tableName: string) => {
  */
 export const checkResourceAccess = async (tableName: string, id: string) => {
   try {
+    // Type the table name as a union of all table names in the schema
+    // This is a temporary solution to bypass type checking for dynamic table access
+    // In a real-world scenario, you might want to use a type-safe approach
     const { data, error, count } = await supabase
-      .from(tableName)
+      .from(tableName as any)
       .select('*', { count: 'exact' })
       .eq('id', id)
       .limit(1);

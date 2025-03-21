@@ -3,9 +3,10 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { handleApiError } from '@/utils/errorHandler';
+import { Database } from '@/integrations/supabase/types';
 
 // Define types for our chat context
-type Message = {
+export type Message = {
   id: string;
   content: string;
   sender_id: string;
@@ -106,8 +107,13 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       if (error) throw error;
       
       // Transform the data to match our Message type
-      const formattedMessages = data.map(msg => ({
-        ...msg,
+      const formattedMessages: Message[] = data.map(msg => ({
+        id: msg.id,
+        content: msg.content,
+        sender_id: msg.sender_id,
+        room_id: msg.room_id,
+        created_at: msg.created_at,
+        message_type: msg.message_type,
         sender: msg.profiles
       }));
       
@@ -160,8 +166,13 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
           .eq('id', payload.new.sender_id)
           .single();
         
-        const newMessage = {
-          ...payload.new,
+        const newMessage: Message = {
+          id: payload.new.id,
+          content: payload.new.content,
+          sender_id: payload.new.sender_id,
+          room_id: payload.new.room_id,
+          created_at: payload.new.created_at,
+          message_type: payload.new.message_type,
           sender: userData
         };
         

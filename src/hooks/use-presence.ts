@@ -2,18 +2,9 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
+import { RealtimeChannel } from '@supabase/supabase-js';
 
-type PresenceState = {
-  [key: string]: {
-    user_id: string;
-    username?: string;
-    avatar_url?: string;
-    status: 'online' | 'away' | 'busy';
-    last_active: string;
-  }[];
-};
-
-type UserPresence = {
+export type UserPresence = {
   user_id: string;
   username?: string;
   avatar_url?: string;
@@ -21,9 +12,13 @@ type UserPresence = {
   last_active: string;
 };
 
+export type PresenceState = {
+  [key: string]: UserPresence[];
+};
+
 export function usePresence(roomId?: string) {
   const { user } = useAuth();
-  const [channel, setChannel] = useState<any>(null);
+  const [channel, setChannel] = useState<RealtimeChannel | null>(null);
   const [presenceState, setPresenceState] = useState<PresenceState>({});
   const [onlineUsers, setOnlineUsers] = useState<UserPresence[]>([]);
 
@@ -38,13 +33,30 @@ export function usePresence(roomId?: string) {
     presenceChannel
       .on('presence', { event: 'sync' }, () => {
         const newState = presenceChannel.presenceState();
-        setPresenceState(newState);
+        // We need to manually cast this as our PresenceState type
+        const typedState: PresenceState = {};
+        
+        // Convert the Supabase presence state to our expected format
+        Object.keys(newState).forEach(key => {
+          typedState[key] = newState[key].map(presence => {
+            // Ensure each presence has the required properties
+            return {
+              user_id: (presence as any).user_id || '',
+              username: (presence as any).username,
+              avatar_url: (presence as any).avatar_url,
+              status: (presence as any).status || 'online',
+              last_active: (presence as any).last_active || new Date().toISOString(),
+            };
+          });
+        });
+        
+        setPresenceState(typedState);
         
         // Convert presence state to array of users
         const users: UserPresence[] = [];
-        Object.values(newState).forEach(userPresences => {
+        Object.values(typedState).forEach(userPresences => {
           userPresences.forEach(presence => {
-            users.push(presence as UserPresence);
+            users.push(presence);
           });
         });
         
