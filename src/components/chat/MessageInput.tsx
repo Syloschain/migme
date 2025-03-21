@@ -7,12 +7,14 @@ import { useToast } from "@/hooks/use-toast";
 import EmojiPicker from "./EmojiPicker";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import VoiceRecorder from "./VoiceRecorder";
+import { parseCommand, formatMessage } from "@/utils/PacketUtils";
 
 interface MessageInputProps {
-  onSendMessage: (message: string) => void;
+  onSendMessage: (message: string, type?: string) => void;
+  disabled?: boolean;
 }
 
-const MessageInput = ({ onSendMessage }: MessageInputProps) => {
+const MessageInput = ({ onSendMessage, disabled = false }: MessageInputProps) => {
   const [message, setMessage] = useState("");
   const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
   const { toast } = useToast();
@@ -20,8 +22,60 @@ const MessageInput = ({ onSendMessage }: MessageInputProps) => {
   const handleSendMessage = () => {
     if (!message.trim()) return;
     
+    // Check for commands
+    if (message.startsWith('/')) {
+      const commandData = parseCommand(message);
+      if (commandData) {
+        handleCommand(commandData);
+        setMessage("");
+        return;
+      }
+    }
+    
+    // Normal message
     onSendMessage(message);
     setMessage("");
+  };
+
+  const handleCommand = (commandData: { command: string, args: string[] }) => {
+    const { command, args } = commandData;
+    
+    switch(command) {
+      case 'help':
+        toast({
+          title: "Available Commands",
+          description: "/help, /gift [username], /me [action], /clear",
+          duration: 5000,
+        });
+        break;
+      case 'me':
+        if (args.length > 0) {
+          onSendMessage(`*${args.join(' ')}*`, 'action');
+        }
+        break;
+      case 'gift':
+        if (args.length > 0) {
+          toast({
+            title: "Gift Command",
+            description: `Opening gift selector for ${args[0]}`,
+          });
+          // We would implement gift selection here
+        }
+        break;
+      case 'clear':
+        // This would be handled by the parent component
+        toast({
+          title: "Clear Command",
+          description: "Clearing chat history for you locally",
+        });
+        break;
+      default:
+        toast({
+          title: "Unknown Command",
+          description: `Command /${command} is not recognized`,
+          variant: "destructive",
+        });
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -77,16 +131,17 @@ const MessageInput = ({ onSendMessage }: MessageInputProps) => {
           />
         ) : (
           <Textarea
-            placeholder="Type your message here..."
+            placeholder={disabled ? "You cannot send messages now..." : "Type your message here..."}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={handleKeyDown}
             className="min-h-[60px] resize-none border-migblue-light/40 focus-visible:ring-migblue"
+            disabled={disabled}
           />
         )}
         <div className="flex justify-between items-center">
           <div className="flex gap-1">
-            <ToggleGroup type="single" variant="outline">
+            <ToggleGroup type="single" variant="outline" disabled={disabled}>
               <ToggleGroupItem value="mic" size="sm" onClick={handleVoiceClick}>
                 <Mic className="h-4 w-4 mr-1" />
                 <span className="text-xs">Voice</span>
@@ -102,11 +157,11 @@ const MessageInput = ({ onSendMessage }: MessageInputProps) => {
             </ToggleGroup>
           </div>
           <div className="flex items-center gap-1">
-            <EmojiPicker onEmojiSelect={handleEmojiSelect} />
+            <EmojiPicker onEmojiSelect={handleEmojiSelect} disabled={disabled} />
             <Button 
               onClick={handleSendMessage}
               className="bg-migblue hover:bg-migblue-dark"
-              disabled={showVoiceRecorder || !message.trim()}
+              disabled={disabled || showVoiceRecorder || !message.trim()}
             >
               <SendHorizonal className="h-4 w-4 mr-1" />
               Send
