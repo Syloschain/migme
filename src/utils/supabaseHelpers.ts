@@ -88,40 +88,64 @@ export const getCreditBalance = async (userId: string) => {
   return data.credit_balance;
 };
 
-// Functions needed for PrivateChatContext
+// Find or create a private chat
 export const findOrCreatePrivateChat = async (userId1: string, userId2: string) => {
   // Check if a chat already exists between these two users
-  const { data: existingChats, error: findError } = await supabase
-    .from('private_chats')
-    .select('id, participants')
-    .contains('participants', [userId1, userId2]);
+  const { data: existingParticipants, error: findError } = await supabase
+    .from('private_chat_participants')
+    .select('chat_id')
+    .in('profile_id', [userId1, userId2]);
     
   if (findError) throw findError;
   
-  // If chat exists, return it
-  if (existingChats && existingChats.length > 0) {
-    return existingChats[0];
+  if (existingParticipants && existingParticipants.length > 0) {
+    // Get unique chat IDs
+    const chatIds = [...new Set(existingParticipants.map(p => p.chat_id))];
+    
+    // For each chat ID, check if both users are participants
+    for (const chatId of chatIds) {
+      const { data: participants, error: countError } = await supabase
+        .from('private_chat_participants')
+        .select('profile_id')
+        .eq('chat_id', chatId);
+        
+      if (countError) throw countError;
+      
+      // Check if both users are in this chat
+      const participantIds = participants.map(p => p.profile_id);
+      if (participantIds.includes(userId1) && participantIds.includes(userId2)) {
+        // Found a chat with both users
+        const { data: chat, error: chatError } = await supabase
+          .from('private_chats')
+          .select()
+          .eq('id', chatId)
+          .single();
+          
+        if (chatError) throw chatError;
+        return chat;
+      }
+    }
   }
   
-  // Create a new chat
+  // Create a new chat if no existing chat was found
   const { data: newChat, error: createError } = await supabase
     .from('private_chats')
-    .insert({
-      participants: [userId1, userId2],
-    })
+    .insert({})
     .select()
     .single();
     
   if (createError) throw createError;
   
   // Create participants entries
-  await supabase
+  const { error: participantsError } = await supabase
     .from('private_chat_participants')
     .insert([
       { chat_id: newChat.id, profile_id: userId1 },
       { chat_id: newChat.id, profile_id: userId2 }
     ]);
     
+  if (participantsError) throw participantsError;
+  
   return newChat;
 };
 
