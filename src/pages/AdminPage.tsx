@@ -6,14 +6,14 @@ import { useAuth } from "@/context/AuthContext";
 import { Navigate } from "react-router-dom";
 
 const AdminPage = () => {
-  const { user, profile, loading } = useAuth();
+  const { user, profile, loading, isSuperMentor } = useAuth();
 
   if (loading) {
     return <div>Loading...</div>;
   }
 
-  // Only allow access to admins or supermentors
-  if (!user || (!profile?.is_admin && !profile?.roles?.includes('supermentor'))) {
+  // Allow access to supermentors for credit management or admins for role management
+  if (!user || (!profile?.is_admin && !isSuperMentor())) {
     return <Navigate to="/" replace />;
   }
 
@@ -23,8 +23,8 @@ const AdminPage = () => {
       
       <Tabs defaultValue="roles">
         <TabsList className="mb-4">
-          <TabsTrigger value="roles">Role Management</TabsTrigger>
-          <TabsTrigger value="credits">Credit Management</TabsTrigger>
+          <TabsTrigger value="roles" disabled={!profile?.is_admin}>Role Management</TabsTrigger>
+          <TabsTrigger value="credits" disabled={!isSuperMentor()}>Credit Management</TabsTrigger>
         </TabsList>
         
         <TabsContent value="roles">

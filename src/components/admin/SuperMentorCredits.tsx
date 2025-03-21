@@ -15,7 +15,8 @@ const SuperMentorCredits = () => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  const isSuperMentor = profile?.roles?.includes('supermentor');
+  // Check if user is a SuperMentor (not just an admin)
+  const isSuperMentor = profile?.roles?.includes('supermentor') || profile?.is_supermentor;
 
   const generateCredits = async () => {
     if (!user) {
