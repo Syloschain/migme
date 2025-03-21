@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { ApiClient } from "@/services/ApiClient";
@@ -20,6 +21,7 @@ interface UserWithRoles {
   is_merchant: boolean;
   is_moderator: boolean;
   is_owner: boolean;
+  is_supermentor: boolean;
 }
 
 const RoleManagement = () => {
@@ -40,7 +42,7 @@ const RoleManagement = () => {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, username, roles, is_admin, is_mentor, is_merchant, is_moderator, is_owner')
+        .select('id, username, roles, is_admin, is_mentor, is_merchant, is_moderator, is_owner, is_supermentor')
         .order('username');
       
       if (error) throw error;
@@ -147,8 +149,8 @@ const RoleManagement = () => {
                       </div>
                     </div>
                     
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-                      {['admin', 'mentor', 'merchant', 'moderator', 'owner'].map((role) => {
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
+                      {['admin', 'mentor', 'merchant', 'moderator', 'owner', 'supermentor'].map((role) => {
                         const roleKey = `is_${role}` as keyof UserWithRoles;
                         return (
                           <div key={role} className="flex items-center space-x-2">

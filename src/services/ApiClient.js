@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 // Function to sign in a user
@@ -135,6 +136,23 @@ const updateProfile = async (userId, updates) => {
   }
 };
 
+// Function to generate credits (for SuperMentor)
+const generateCredits = async (supermentorId, targetUserId, amount) => {
+  try {
+    const { data, error } = await supabase.rpc("generate_credits", {
+      admin_id: supermentorId,
+      target_user_id: targetUserId,
+      amount: amount
+    });
+    
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error("Error generating credits:", error.message);
+    throw error;
+  }
+};
+
 export const ApiClient = {
   signIn,
   signUp,
@@ -144,6 +162,7 @@ export const ApiClient = {
   createProfile,
   getProfile,
   updateProfile,
+  generateCredits,
 
   // Update user role function
   updateUserRole: async (userId, role, addRole) => {

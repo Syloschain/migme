@@ -16,6 +16,7 @@ interface AuthContextType {
   updateProfile: (updates: any) => Promise<{ success: boolean, profile?: any, error?: string }>;
   hasRole: (role: UserRole) => boolean;
   isAdmin: () => boolean;
+  isSuperMentor: () => boolean;
   isRoomModerator: (roomId: string) => Promise<boolean>;
   isAuthenticated: boolean;
 }
@@ -146,6 +147,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return profile?.is_admin || false;
   };
   
+  // Check if the current user is a SuperMentor
+  const isSuperMentor = (): boolean => {
+    return profile?.roles?.includes('supermentor') || false;
+  };
+  
   // Check if the current user is a moderator of a specific room
   const isRoomModerator = async (roomId: string): Promise<boolean> => {
     if (!user) return false;
@@ -171,6 +177,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         updateProfile,
         hasRole,
         isAdmin,
+        isSuperMentor,
         isRoomModerator,
         isAuthenticated: !!user 
       }}
