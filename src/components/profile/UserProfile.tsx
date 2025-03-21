@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
+import VIPBadge from "./VIPBadge";
 
 const formSchema = z.object({
   username: z.string().min(3, {
@@ -22,7 +23,11 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-const UserProfile = () => {
+interface UserProfileProps {
+  isVIP?: boolean;
+}
+
+const UserProfile = ({ isVIP = false }: UserProfileProps) => {
   const { profile, updateProfile } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -94,8 +99,11 @@ const UserProfile = () => {
             <AvatarImage src={profile.avatar_url || undefined} alt={profile.username} />
             <AvatarFallback>{profile.username?.substring(0, 2).toUpperCase()}</AvatarFallback>
           </Avatar>
-          <div>
-            <CardTitle className="text-2xl">{profile.username}'s Profile</CardTitle>
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-2xl">{profile.username}'s Profile</CardTitle>
+              {isVIP && <VIPBadge />}
+            </div>
             <CardDescription>Update your profile information</CardDescription>
           </div>
         </div>
