@@ -3,7 +3,6 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { handleApiError } from '@/utils/errorHandler';
-import { Database } from '@/integrations/supabase/types';
 
 // Define types for our chat context
 export type Message = {
