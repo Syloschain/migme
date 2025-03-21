@@ -1,30 +1,64 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import LeaderboardEntry, { LeaderboardEntryData } from "./LeaderboardEntry";
+import { supabase } from "@/integrations/supabase/client";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface LeaderboardComponentProps {
   gameId?: string;
 }
 
 const LeaderboardComponent: React.FC<LeaderboardComponentProps> = ({ gameId }) => {
-  // Mock data for leaderboard
-  const getMockData = (): LeaderboardEntryData[] => {
-    if (!gameId || gameId === 'all') return [];
+  const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntryData[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    const fetchLeaderboard = async () => {
+      if (!gameId || gameId === 'all') {
+        setLoading(false);
+        return;
+      }
+      
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('game_leaderboards')
+          .select(`
+            id, 
+            score,
+            profiles:player_id (
+              id, username, avatar_url, level
+            )
+          `)
+          .eq('game_id', gameId)
+          .order('score', { ascending: false })
+          .limit(10);
+          
+        if (error) throw error;
+        
+        // Transform the data to match our LeaderboardEntryData format
+        const transformedData = data ? data.map((entry, index) => ({
+          id: entry.id,
+          rank: index + 1,
+          username: entry.profiles?.username || 'Unknown Player',
+          avatarUrl: entry.profiles?.avatar_url || '/placeholder.svg',
+          score: entry.score,
+          level: entry.profiles?.level || 1
+        })) : [];
+        
+        setLeaderboardData(transformedData);
+      } catch (error) {
+        console.error("Error fetching leaderboard:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
     
-    // This would be replaced with actual API calls in a real implementation
-    return [
-      { id: "1", rank: 1, username: "Player1", avatarUrl: "/placeholder.svg", score: 1250, level: 10 },
-      { id: "2", rank: 2, username: "Player2", avatarUrl: "/placeholder.svg", score: 980, level: 8 },
-      { id: "3", rank: 3, username: "Player3", avatarUrl: "/placeholder.svg", score: 810, level: 9 },
-      { id: "4", rank: 4, username: "Player4", avatarUrl: "/placeholder.svg", score: 740, level: 7 },
-      { id: "5", rank: 5, username: "Player5", avatarUrl: "/placeholder.svg", score: 620, level: 6 }
-    ];
-  };
+    fetchLeaderboard();
+  }, [gameId]);
   
-  const leaderboardData = getMockData();
-  
-  if (!gameId || gameId === 'all' || leaderboardData.length === 0) {
+  if (!gameId || gameId === 'all') {
     return null;
   }
   
@@ -34,14 +68,32 @@ const LeaderboardComponent: React.FC<LeaderboardComponentProps> = ({ gameId }) =
         <CardTitle className="text-lg">Leaderboard</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-          {leaderboardData.map((entry) => (
-            <LeaderboardEntry
-              key={entry.id}
-              entry={entry}
-            />
-          ))}
-        </div>
+        {loading ? (
+          <div className="space-y-4">
+            {Array(5).fill(0).map((_, i) => (
+              <div key={i} className="flex items-center gap-4">
+                <Skeleton className="h-10 w-10 rounded-full" />
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-[200px]" />
+                  <Skeleton className="h-4 w-[100px]" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : leaderboardData.length === 0 ? (
+          <div className="text-center py-4 text-muted-foreground">
+            No leaderboard data available yet
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {leaderboardData.map((entry) => (
+              <LeaderboardEntry
+                key={entry.id}
+                entry={entry}
+              />
+            ))}
+          </div>
+        )}
       </CardContent>
     </Card>
   );

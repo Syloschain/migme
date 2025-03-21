@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { User, MoreHorizontal, Phone, Video } from "lucide-react";
 import { CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,40 +15,44 @@ import {
 } from "@/components/ui/dropdown-menu";
 import MessageInput from "./MessageInput";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/context/AuthContext";
+import { usePrivateChat } from "@/contexts/PrivateChatContext";
 
 interface PrivateChatProps {
+  chatId: string;
   userName: string;
   status?: "online" | "offline" | "away" | "busy";
   avatarUrl?: string;
 }
 
 const PrivateChat = ({
+  chatId,
   userName,
   status = "online",
   avatarUrl,
 }: PrivateChatProps) => {
-  const [messages, setMessages] = useState<{text: string; isFromUser: boolean}[]>([
-    { text: "Hey there! How are you doing today?", isFromUser: false },
-  ]);
+  const { user } = useAuth();
   const { toast } = useToast();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { messages, sendMessage, loadingMessages, setCurrentChat } = usePrivateChat();
 
-  const statusColors = {
-    online: "bg-green-500",
-    offline: "bg-gray-400",
-    away: "bg-yellow-500",
-    busy: "bg-red-500",
-  };
-
-  const handleSendMessage = (message: string) => {
-    setMessages((prev) => [...prev, { text: message, isFromUser: true }]);
+  useEffect(() => {
+    if (chatId) {
+      setCurrentChat(chatId);
+    }
     
-    // Simulate a response from the friend after a short delay
-    setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        { text: "I'm just a demo response, real messaging coming soon!", isFromUser: false },
-      ]);
-    }, 1000);
+    // Cleanup function
+    return () => setCurrentChat(null);
+  }, [chatId, setCurrentChat]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  const handleSendMessage = (message: string, type: string = 'text', isLocked: boolean = false) => {
+    if (message.trim() === "") return;
+    sendMessage(message, type, isLocked);
   };
 
   const handleVoiceCall = () => {
@@ -63,6 +67,13 @@ const PrivateChat = ({
       title: "Video Call",
       description: "Video calls are coming soon!",
     });
+  };
+
+  const statusColors = {
+    online: "bg-green-500",
+    offline: "bg-gray-400",
+    away: "bg-yellow-500",
+    busy: "bg-red-500",
   };
 
   return (
@@ -128,22 +139,37 @@ const PrivateChat = ({
 
       <CardContent className="p-0 flex flex-col h-[calc(80vh-190px)]">
         <ScrollArea className="flex-grow p-4">
-          {messages.map((msg, index) => (
-            <div
-              key={index}
-              className={`mb-4 flex ${msg.isFromUser ? "justify-end" : "justify-start"}`}
-            >
-              <div
-                className={`px-3 py-2 rounded-lg max-w-[75%] ${
-                  msg.isFromUser
-                    ? "bg-migblue text-white rounded-tr-none"
-                    : "bg-gray-100 dark:bg-gray-800 rounded-tl-none"
-                }`}
-              >
-                {msg.text}
-              </div>
+          {loadingMessages ? (
+            <div className="flex justify-center items-center h-full">
+              <div className="animate-spin h-6 w-6 border-t-2 border-migblue rounded-full"></div>
             </div>
-          ))}
+          ) : messages.length > 0 ? (
+            messages.map((msg) => (
+              <div
+                key={msg.id}
+                className={`mb-4 flex ${msg.sender_id === user?.id ? "justify-end" : "justify-start"}`}
+              >
+                <div
+                  className={`px-3 py-2 rounded-lg max-w-[75%] ${
+                    msg.sender_id === user?.id
+                      ? "bg-migblue text-white rounded-tr-none"
+                      : "bg-gray-100 dark:bg-gray-800 rounded-tl-none"
+                  }`}
+                >
+                  {msg.content}
+                  <div className="text-xs opacity-70 mt-1">
+                    {new Date(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              <p>No messages yet</p>
+              <p className="text-sm mt-2">Start a conversation!</p>
+            </div>
+          )}
+          <div ref={messagesEndRef} />
         </ScrollArea>
         
         <MessageInput onSendMessage={handleSendMessage} />
