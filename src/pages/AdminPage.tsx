@@ -21,7 +21,7 @@ const AdminPage = () => {
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-6">Admin Dashboard</h1>
       
-      <Tabs defaultValue="roles">
+      <Tabs defaultValue={isSuperMentor() ? "credits" : "roles"}>
         <TabsList className="mb-4">
           <TabsTrigger value="roles" disabled={!profile?.is_admin}>Role Management</TabsTrigger>
           <TabsTrigger value="credits" disabled={!isSuperMentor()}>Credit Management</TabsTrigger>
