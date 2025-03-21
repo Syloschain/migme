@@ -2,6 +2,8 @@
 import { Link } from "react-router-dom";
 import { User, MessageSquare, Users, Gift, Home, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import CreditDisplay from "../credits/CreditDisplay";
+import NotificationIndicator from "./NotificationIndicator";
 
 const Navbar = () => {
   return (
@@ -35,6 +37,8 @@ const Navbar = () => {
         </div>
         
         <div className="flex items-center gap-2">
+          <CreditDisplay credits={500} size="sm" showBuyButton={false} className="hidden sm:flex" />
+          <NotificationIndicator count={2} />
           <Button variant="secondary" size="sm" className="flex items-center gap-1">
             <LogOut size={16} />
             <span className="hidden sm:inline">Logout</span>

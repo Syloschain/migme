@@ -1,6 +1,6 @@
 
 import { Link } from "react-router-dom";
-import { User, MessageSquare, Users, Gift, Home } from "lucide-react";
+import { User, MessageSquare, Users, Gift, Home, Gamepad2 } from "lucide-react";
 
 const MobileNav = () => {
   return (
@@ -14,13 +14,13 @@ const MobileNav = () => {
           <MessageSquare size={20} />
           <span className="text-xs mt-1">Chat</span>
         </Link>
+        <Link to="/games" className="flex flex-col items-center p-2">
+          <Gamepad2 size={20} />
+          <span className="text-xs mt-1">Games</span>
+        </Link>
         <Link to="/friends" className="flex flex-col items-center p-2">
           <Users size={20} />
           <span className="text-xs mt-1">Friends</span>
-        </Link>
-        <Link to="/gifts" className="flex flex-col items-center p-2">
-          <Gift size={20} />
-          <span className="text-xs mt-1">Gifts</span>
         </Link>
         <Link to="/profile" className="flex flex-col items-center p-2">
           <User size={20} />
