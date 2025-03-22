@@ -225,6 +225,45 @@ export type Database = {
           },
         ]
       }
+      game_leaderboards: {
+        Row: {
+          created_at: string
+          game_id: string
+          id: string
+          player_id: string
+          score: number
+        }
+        Insert: {
+          created_at?: string
+          game_id: string
+          id?: string
+          player_id: string
+          score?: number
+        }
+        Update: {
+          created_at?: string
+          game_id?: string
+          id?: string
+          player_id?: string
+          score?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_leaderboards_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_leaderboards_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       game_participants: {
         Row: {
           joined_at: string | null
@@ -821,6 +860,13 @@ export type Database = {
           amount: number
         }
         Returns: undefined
+      }
+      purchase_gift: {
+        Args: {
+          gift_id: string
+          buyer_id: string
+        }
+        Returns: string
       }
       send_gift: {
         Args: {

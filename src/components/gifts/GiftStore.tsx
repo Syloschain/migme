@@ -83,10 +83,13 @@ const GiftStore = () => {
     }
     
     try {
-      const { data, error } = await supabase.rpc('purchase_gift', {
-        gift_id: giftId,
-        buyer_id: user.id
-      });
+      const { data, error } = await supabase.rpc(
+        'purchase_gift', 
+        { 
+          gift_id: giftId,
+          buyer_id: user.id
+        }
+      );
       
       if (error) throw error;
       

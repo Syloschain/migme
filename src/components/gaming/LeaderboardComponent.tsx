@@ -35,7 +35,7 @@ const LeaderboardComponent: React.FC<LeaderboardComponentProps> = ({ gameId }) =
               id, game_id
             )
           `)
-          .eq('session:game_id', gameId)
+          .eq('session.game_id', gameId)
           .order('score', { ascending: false })
           .limit(10);
           
