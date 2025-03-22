@@ -22,16 +22,20 @@ const LeaderboardComponent: React.FC<LeaderboardComponentProps> = ({ gameId }) =
       
       try {
         setLoading(true);
+        // Query game_participants table instead of game_leaderboards since it's related to game sessions
         const { data, error } = await supabase
-          .from('game_leaderboards')
+          .from('game_participants')
           .select(`
-            id, 
             score,
-            profiles:player_id (
+            profile_id,
+            profiles:profile_id (
               id, username, avatar_url, level
+            ),
+            session:session_id (
+              id, game_id
             )
           `)
-          .eq('game_id', gameId)
+          .eq('session:game_id', gameId)
           .order('score', { ascending: false })
           .limit(10);
           
@@ -39,11 +43,11 @@ const LeaderboardComponent: React.FC<LeaderboardComponentProps> = ({ gameId }) =
         
         // Transform the data to match our LeaderboardEntryData format
         const transformedData = data ? data.map((entry, index) => ({
-          id: entry.id,
+          id: entry.profile_id, // Using profile_id as a unique identifier
           rank: index + 1,
           username: entry.profiles?.username || 'Unknown Player',
           avatarUrl: entry.profiles?.avatar_url || '/placeholder.svg',
-          score: entry.score,
+          score: entry.score || 0,
           level: entry.profiles?.level || 1
         })) : [];
         
