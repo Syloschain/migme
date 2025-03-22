@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -42,8 +41,7 @@ const GiftStore = () => {
         setGiftItems(data || []);
       } catch (error) {
         handleApiError(error, { 
-          title: 'Error', 
-          description: 'Failed to load gift items' 
+          title: 'Error loading gift items'
         });
       } finally {
         setLoading(false);
@@ -52,7 +50,6 @@ const GiftStore = () => {
     
     fetchGifts();
     
-    // Set up real-time subscription for gift updates
     const channel = supabase
       .channel('gift_store_changes')
       .on('postgres_changes', 
@@ -103,7 +100,6 @@ const GiftStore = () => {
     }
     
     try {
-      // Use the purchase_gift RPC function from Supabase
       const { data, error } = await supabase.rpc(
         'purchase_gift', 
         { 
@@ -120,13 +116,11 @@ const GiftStore = () => {
       });
     } catch (error) {
       handleApiError(error, {
-        title: 'Purchase Failed',
-        description: 'Failed to purchase the gift item'
+        title: 'Purchase Failed'
       });
     }
   };
 
-  // Function to add to favorites (could be implemented in the future)
   const handleAddToFavorites = (giftId: string) => {
     toast({
       title: 'Added to favorites',

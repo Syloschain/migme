@@ -10,6 +10,7 @@ type ErrorOptions = {
   duration?: number;
   showToast?: boolean;
   logToConsole?: boolean;
+  description?: string; // Adding the description property to the type
 };
 
 /**
@@ -21,6 +22,7 @@ export const handleApiError = (
 ) => {
   const {
     title = "Operation Failed",
+    description = error instanceof Error ? error.message : (error as any)?.message || 'An unexpected error occurred',
     duration = 5000,
     showToast = true,
     logToConsole = true,
@@ -40,7 +42,7 @@ export const handleApiError = (
   if (showToast) {
     toast({
       title,
-      description: errorMessage,
+      description,
       variant: "destructive",
       duration,
     });

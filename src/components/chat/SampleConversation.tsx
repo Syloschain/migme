@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import ChatMessage from "./ChatMessage";
 import { useChat } from "@/contexts/ChatContext";
-import { Spinner } from "@/components/ui/spinner";
+import Spinner from "@/components/ui/spinner";
 
 const RealTimeConversation = () => {
   const { user } = useAuth();
