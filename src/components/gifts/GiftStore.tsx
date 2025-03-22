@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { handleApiError } from "@/utils/errorHandler";
 
 interface GiftItem {
   id: string;
@@ -30,6 +32,7 @@ const GiftStore = () => {
   useEffect(() => {
     const fetchGifts = async () => {
       try {
+        setLoading(true);
         const { data, error } = await supabase
           .from('virtual_gifts')
           .select('*');
@@ -38,11 +41,9 @@ const GiftStore = () => {
         
         setGiftItems(data || []);
       } catch (error) {
-        console.error('Error fetching gifts:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to load gift items',
-          variant: 'destructive'
+        handleApiError(error, { 
+          title: 'Error', 
+          description: 'Failed to load gift items' 
         });
       } finally {
         setLoading(false);
@@ -50,6 +51,25 @@ const GiftStore = () => {
     };
     
     fetchGifts();
+    
+    // Set up real-time subscription for gift updates
+    const channel = supabase
+      .channel('gift_store_changes')
+      .on('postgres_changes', 
+        {
+          event: '*',
+          schema: 'public',
+          table: 'virtual_gifts'
+        }, 
+        () => {
+          fetchGifts();
+        }
+      )
+      .subscribe();
+      
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [toast]);
 
   const allGifts = giftItems.filter((item) =>
@@ -83,6 +103,7 @@ const GiftStore = () => {
     }
     
     try {
+      // Use the purchase_gift RPC function from Supabase
       const { data, error } = await supabase.rpc(
         'purchase_gift', 
         { 
@@ -98,13 +119,19 @@ const GiftStore = () => {
         description: 'Gift has been added to your inventory',
       });
     } catch (error) {
-      console.error('Error purchasing gift:', error);
-      toast({
+      handleApiError(error, {
         title: 'Purchase Failed',
-        description: 'Failed to purchase the gift item',
-        variant: 'destructive'
+        description: 'Failed to purchase the gift item'
       });
     }
+  };
+
+  // Function to add to favorites (could be implemented in the future)
+  const handleAddToFavorites = (giftId: string) => {
+    toast({
+      title: 'Added to favorites',
+      description: 'This gift has been added to your favorites',
+    });
   };
 
   return (
@@ -148,27 +175,27 @@ const GiftStore = () => {
             </TabsList>
             
             <TabsContent value="all" className="mt-6">
-              <GiftGrid gifts={allGifts} userCredits={profile?.credit_balance || 0} onPurchase={handlePurchase} />
+              <GiftGrid gifts={allGifts} userCredits={profile?.credit_balance || 0} onPurchase={handlePurchase} onAddToFavorites={handleAddToFavorites} />
             </TabsContent>
             
             <TabsContent value="popular" className="mt-6">
-              <GiftGrid gifts={popularGifts} userCredits={profile?.credit_balance || 0} onPurchase={handlePurchase} />
+              <GiftGrid gifts={popularGifts} userCredits={profile?.credit_balance || 0} onPurchase={handlePurchase} onAddToFavorites={handleAddToFavorites} />
             </TabsContent>
             
             <TabsContent value="emoticons" className="mt-6">
-              <GiftGrid gifts={emoticonGifts} userCredits={profile?.credit_balance || 0} onPurchase={handlePurchase} />
+              <GiftGrid gifts={emoticonGifts} userCredits={profile?.credit_balance || 0} onPurchase={handlePurchase} onAddToFavorites={handleAddToFavorites} />
             </TabsContent>
             
             <TabsContent value="avatars" className="mt-6">
-              <GiftGrid gifts={avatarGifts} userCredits={profile?.credit_balance || 0} onPurchase={handlePurchase} />
+              <GiftGrid gifts={avatarGifts} userCredits={profile?.credit_balance || 0} onPurchase={handlePurchase} onAddToFavorites={handleAddToFavorites} />
             </TabsContent>
             
             <TabsContent value="seasonal" className="mt-6">
-              <GiftGrid gifts={seasonalGifts} userCredits={profile?.credit_balance || 0} onPurchase={handlePurchase} />
+              <GiftGrid gifts={seasonalGifts} userCredits={profile?.credit_balance || 0} onPurchase={handlePurchase} onAddToFavorites={handleAddToFavorites} />
             </TabsContent>
             
             <TabsContent value="premium" className="mt-6">
-              <GiftGrid gifts={premiumGifts} userCredits={profile?.credit_balance || 0} onPurchase={handlePurchase} />
+              <GiftGrid gifts={premiumGifts} userCredits={profile?.credit_balance || 0} onPurchase={handlePurchase} onAddToFavorites={handleAddToFavorites} />
             </TabsContent>
           </Tabs>
         )}
@@ -181,9 +208,10 @@ interface GiftGridProps {
   gifts: GiftItem[];
   userCredits: number;
   onPurchase: (giftId: string, price: number) => void;
+  onAddToFavorites: (giftId: string) => void;
 }
 
-const GiftGrid = ({ gifts, userCredits, onPurchase }: GiftGridProps) => {
+const GiftGrid = ({ gifts, userCredits, onPurchase, onAddToFavorites }: GiftGridProps) => {
   if (gifts.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
@@ -210,7 +238,12 @@ const GiftGrid = ({ gifts, userCredits, onPurchase }: GiftGridProps) => {
             {gift.is_limited && (
               <Badge className="absolute top-2 right-2 bg-red-500">Limited</Badge>
             )}
-            <Button variant="ghost" size="icon" className="absolute bottom-2 right-2">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="absolute bottom-2 right-2"
+              onClick={() => onAddToFavorites(gift.id)}
+            >
               <Heart size={18} />
             </Button>
           </div>

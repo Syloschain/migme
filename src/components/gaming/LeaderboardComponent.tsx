@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import LeaderboardEntry, { LeaderboardEntryData } from "./LeaderboardEntry";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
+import { handleApiError } from "@/utils/errorHandler";
 
 interface LeaderboardComponentProps {
   gameId?: string;
@@ -22,16 +23,17 @@ const LeaderboardComponent: React.FC<LeaderboardComponentProps> = ({ gameId }) =
       
       try {
         setLoading(true);
-        // Query game_participants table instead of game_leaderboards since it's related to game sessions
+        
+        // Query game_participants table to get real-time game data
         const { data, error } = await supabase
           .from('game_participants')
           .select(`
             score,
             profile_id,
-            profiles:profile_id (
+            profiles(
               id, username, avatar_url, level
             ),
-            session:session_id (
+            session:session_id(
               id, game_id
             )
           `)
@@ -53,13 +55,35 @@ const LeaderboardComponent: React.FC<LeaderboardComponentProps> = ({ gameId }) =
         
         setLeaderboardData(transformedData);
       } catch (error) {
-        console.error("Error fetching leaderboard:", error);
+        handleApiError(error, { title: "Error fetching leaderboard" });
       } finally {
         setLoading(false);
       }
     };
     
     fetchLeaderboard();
+    
+    // Set up real-time subscription for leaderboard updates
+    if (gameId && gameId !== 'all') {
+      const channel = supabase
+        .channel('game_leaderboard_changes')
+        .on('postgres_changes', 
+          {
+            event: '*',
+            schema: 'public',
+            table: 'game_participants',
+            filter: `session.game_id=eq.${gameId}`
+          }, 
+          () => {
+            fetchLeaderboard();
+          }
+        )
+        .subscribe();
+        
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
   }, [gameId]);
   
   if (!gameId || gameId === 'all') {
